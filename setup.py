@@ -1,18 +1,17 @@
 #!/usr/bin/env python
 
 """
-spat.py - A Python TkInter GUI for visually measuring and
+A Python TkInter GUI for visually measuring and
 demonstrating physical uncloneable functions
-"""
-
-__license__ = """
-GPL Version 3
+---
 
 Copyright (2014) Sandia Corporation. Under the terms of Contract
 DE-AC04-94AL85000, there is a non-exclusive license for use of this
 work by or on behalf of the U.S. Government. Export of this program
 may require a license from the United States Government.
 
+GPL Version 3
+-------------
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
