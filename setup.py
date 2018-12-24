@@ -26,11 +26,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
+import platform
 import os
 from setuptools import setup
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
+
+requires = [
+    'bitstring>=3.1,<3.2'
+    ]
+
+test_requires = []
+
+if int(platform.python_version_tuple()[0]) < 3:
+    requires.extend(['unittest2', 'mock'])
+    test_requires.extend(['unittest2', 'mock'])
 
 setup(
     name = "spat",
@@ -43,6 +54,9 @@ setup(
     keywords = "education hardware security random physical unclonable function",
     url = "http://github.com/sandialabs/spat",
     packages=['spat'],
+    install_requires=requires,
+    tests_require=test_requires,
+    test_suite='spat.tests',
     long_description=read('README.md'),
     classifiers=[
         "Development Status :: 5 - Production/Stable",
