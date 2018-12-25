@@ -30,71 +30,62 @@ __version__ = "1.2"
 __author__ = "Ryan Helinski and Mitch Martin"
 
 import os
-import bitstring
+from bitstring import Bits
 from bitstringutils import *
 
 class SigFile(object):
     """A class to load and store signatures in various formats"""
+    mode_map = {'r': 'rb', 'a': 'ab'}
 
-    def __init__(self, fileName, nb=1024):
-        self.nb = nb
+    def __init__(self, fileName, n_bits=1024, mode='r'):
+        self.n_bits = n_bits
         self.fileName = fileName
-        #self.open()
+        self.open(mode)
     
     def __destroy__(self):
         self.close()
 
     def close(self):
-        try:
-            self.f.close()
-        except AttributeError as e:
-            return False
-        return True
+        if not self.f.mode.startswith('r'):
+            self.save()
+        self.f.close()
     
-    def open(self, fileName=None, mode='rb'):
-        if (fileName):
-            self.fileName = fileName
+    def open(self, mode='r'):
+        if mode not in self.mode_map.keys():
+            raise ValueError('Mode needs to be one of \'r\' or \'a\'')
 
-        if not os.path.isdir(os.path.split(self.fileName)[0]):
-            os.makedirs(os.path.split(self.fileName)[0])
-        self.f = open(self.fileName, mode)
+        dirname = os.path.dirname(self.fileName)
+        if not os.path.isdir(dirname):
+            os.makedirs(dirname)
+
+        self.f = open(self.fileName, self.mode_map[mode])
 
     def next(self):
-        if ('f' not in self.__dict__ or not self.f.mode.startswith('r')):
-            self.open()
-        bindata = self.f.read(self.nb/8)
-        if (len(bindata) < self.nb/8):
+        def getdata():
+            return self.f.read(self.n_bits/8)
+
+        bindata = getdata()
+        if (len(bindata) < self.n_bits/8):
             # Start back at the beginning 
-            print "Hit EOF, starting back at the beginning"
+            print 'Hit EOF of "%s", starting back at the beginning' % self.fileName
             self.f.seek(0)
-            bindata = self.f.read(self.nb/8)
-            
-        new_bits = bitstring.Bits(bytes=bindata)
-        #print repr(new_bits)
-            
-        return new_bits
+            bindata = getdata()
+
+        return Bits(bytes=bindata)
 
     def append(self, new_bits):
-        # should check if file is open
-        #if (self.f.closed or not self.f.mode.startswith('a')): 
-            #self.f.open
-        if ('f' in self.__dict__ and not self.f.closed):
-            self.f.close()
-
-        self.open(mode='ab')
+        if self.f.closed or self.f.mode.startswith('r'):
+            raise Exception('File must be open in append mode')
 
         self.f.write(new_bits.bytes)
-        self.f.flush() 
-        os.fsync(self.f) # make sure it gets written now
 
     def __getitem__(self, index):
-        offset = index * self.nb / 8 
+        offset = index * self.n_bits / 8 
         self.f.seek(offset)
         return self.next()
 
-    # Not sure supporting __setitem__ makes sense 
+    # __setitem__ not implemented
 
-    def save(self, fileName):
-        if fileName.endswith('.dat'):
-            self.bits.tofile(fileName)
-
+    def save(self):
+        self.f.flush() 
+        os.fsync(self.f) # make sure it gets written now
