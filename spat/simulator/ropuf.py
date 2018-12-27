@@ -42,7 +42,7 @@ __author__ = "Ryan Helinski and Mitch Martin"
 
 import os, random
 import bitstring
-from bitstringutils import *
+from spat.bitstringutils import *
 import xml.etree.ElementTree as etree
 from abstractsimulator import AbstractSimulator
 

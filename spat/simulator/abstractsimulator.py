@@ -35,7 +35,7 @@ __version__ = "1.2"
 __author__ = "Ryan Helinski and Mitch Martin"
 
 import os, bitstring, random
-from bitstringutils import *
+from spat.bitstringutils import *
 import xml.etree.ElementTree as etree
 
 class AbstractSimulator(object):

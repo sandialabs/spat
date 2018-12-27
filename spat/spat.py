@@ -689,8 +689,9 @@ class Application(Frame):
                     self.sigFileWriter.close()
                 filePath = self.getChipDatPath(chip_name)
                 print "Saving PUF data to '%s'" % filePath
-                self.sigFileWriter = SigFile(filePath)
+                self.sigFileWriter = SigFile(filePath, mode='a')
             self.sigFileWriter.append(new_bits)
+            self.sigFileWriter.save() # TODO delay this
 
         # Error correction filter
         if (self.correctVar.get() == 1):

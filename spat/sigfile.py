@@ -77,6 +77,7 @@ class SigFile(object):
         if self.f.closed or self.f.mode.startswith('r'):
             raise Exception('File must be open in append mode')
 
+        self.f.seek(0, 2) # Seek to the file end
         self.f.write(new_bits.bytes)
 
     def __getitem__(self, index):
