@@ -85,11 +85,16 @@ class SigFileTest(TestCase):
         m_isdir.assert_called_with('/path/to')
         m_makedirs.assert_called_with('/path/to')
 
+    def test_open_bad_mode(self):
+        with patch('spat.sigfile.SigFile.open') as m_sigfile_open:
+            sf = sigfile.SigFile('/path/to/foo')
+        self.assertRaises(ValueError, sf.open, 'x')
+
     @patch('os.path.isdir')
     def test_next(self, m_isdir):
         m_isdir.return_value = True
         with patch(('builtins' if PY3 else '__builtin__') + '.open',
-               mock_open(read_data='food')) as m_open:
+               mock_open(read_data='chair')) as m_open:
             sf = sigfile.SigFile('/path/to/foo', 24)
         with patch.object(sf.f, 'read', MagicMock(side_effect=['foo', 'bar', 'no', 'baz'])):
             retval = sf.next()
@@ -99,3 +104,48 @@ class SigFileTest(TestCase):
             retval = sf.next()
             self.assertEqual(retval, Bits(bytes='baz'))
             sf.f.seek.assert_called_once_with(0)
+
+    def test_append_closed(self):
+        with patch('spat.sigfile.SigFile.open') as m_sigfile_open:
+            sf = sigfile.SigFile('/path/to/foo')
+        sf.f = MagicMock()
+        with patch.object(sf.f, 'closed', True):
+           self.assertRaises(Exception, sf.append, 'foo')
+        with patch.object(sf.f, 'mode', 'rfoo'):
+           self.assertRaises(Exception, sf.append, 'foo')
+
+    def test_append(self):
+        with patch('spat.sigfile.SigFile.open') as m_sigfile_open:
+            sf = sigfile.SigFile('/path/to/foo')
+        sf.f = MagicMock()
+        sf.f.closed = False
+        sf.f.mode = 'ab'
+        foo = MagicMock()
+        sf.append(foo)
+        sf.f.seek.assert_called_with(0, 2)
+        sf.f.write.assert_called_with(foo.bytes)
+
+    def test_getitem(self):
+        with patch('spat.sigfile.SigFile.open') as m_sigfile_open:
+            sf = sigfile.SigFile('/path/to/foo')
+        sf.f = MagicMock()
+        with patch.object(sf, 'next') as m_next:
+            val = sf[42]
+        sf.f.seek.assert_called_with(42*1024/8)
+        m_next.assert_called()
+
+    def test_save(self):
+        with patch('spat.sigfile.SigFile.open') as m_sigfile_open:
+            sf = sigfile.SigFile('/path/to/foo')
+        sf.f = MagicMock()
+        with patch('os.fsync') as m_fsync:
+            sf.save()
+        sf.f.flush.assert_called()
+        m_fsync.assert_called_with(sf.f)
+
+    def test_destroy(self):
+        with patch('spat.sigfile.SigFile.open') as m_sigfile_open:
+            sf = sigfile.SigFile('/path/to/foo')
+        with patch.object(sf, 'close') as m_close:
+            sf.__destroy__()
+            m_close.assert_called()
