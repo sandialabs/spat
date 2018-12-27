@@ -33,6 +33,9 @@ import os
 from bitstring import Bits
 from bitstringutils import *
 
+import logging
+_log = logging.getLogger('spat')
+
 class SigFile(object):
     """A class to load and store signatures in various formats"""
     mode_map = {'r': 'rb', 'a': 'ab'}
@@ -67,7 +70,7 @@ class SigFile(object):
         bindata = getdata()
         if (len(bindata) < self.n_bits/8):
             # Start back at the beginning 
-            print 'Hit EOF of "%s", starting back at the beginning' % self.fileName
+            _log.info('Hit EOF of "%s", starting back at the beginning' % self.fileName)
             self.f.seek(0)
             bindata = getdata()
 
