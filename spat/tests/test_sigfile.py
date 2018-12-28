@@ -179,6 +179,7 @@ class SigFileIntegrationTests(TestCase):
     def test_write(self):
         with patch('spat.sigfile.SigFile.open') as m_sigfile_open:
             sf = sigfile.SigFile('/path/to/foo', n_bits=self.n_bits)
+        sf.f = StringIO()
         sf.f.mode = 'ab'
         sig_file = ''
 
