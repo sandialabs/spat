@@ -31,7 +31,7 @@ __author__ = "Ryan Helinski and Mitch Martin"
 
 import os
 from bitstring import Bits
-from bitstringutils import *
+from .bitstringutils import *
 
 import logging
 _log = logging.getLogger('spat')
