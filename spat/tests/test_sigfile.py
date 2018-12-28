@@ -33,10 +33,16 @@ except ImportError:
     from unittest2 import TestCase, main, skipIf
     PY3 = False
 
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+import os
+
 from bitstring import Bits
 from spat import sigfile
 
-class SigFileTest(TestCase):
+class SigFileUnitTests(TestCase):
     'sigfile unit tests'
 
     magna_carta = 'birdseeddirtfeet'
@@ -149,3 +155,36 @@ class SigFileTest(TestCase):
         with patch.object(sf, 'close') as m_close:
             sf.__destroy__()
             m_close.assert_called()
+
+class SigFileIntegrationTests(TestCase):
+    'sigfile integration tests'
+
+    n_bits=24
+    n_sigs=5
+    example_sig_file = os.urandom(n_sigs*n_bits>>3)
+
+    def test_read(self):
+        with patch('spat.sigfile.SigFile.open') as m_sigfile_open:
+            sf = sigfile.SigFile('/path/to/foo', n_bits=self.n_bits)
+        sf.f = StringIO(self.example_sig_file)
+
+        mult = self.n_bits>>3
+        for i in range(self.n_sigs):
+            sig = sf.next()
+            self.assertEqual(sig.bytes, self.example_sig_file[i*mult:(i+1)*mult])
+
+        sig = sf.next()
+        self.assertEqual(sig.bytes, self.example_sig_file[0:mult])
+
+    def test_write(self):
+        with patch('spat.sigfile.SigFile.open') as m_sigfile_open:
+            sf = sigfile.SigFile('/path/to/foo', n_bits=self.n_bits)
+        sf.f.mode = 'ab'
+        sig_file = ''
+
+        for i in range(self.n_sigs):
+            sig = os.urandom(self.n_bits>>3)
+            sig_file += sig
+            sf.append(Bits(bytes=sig))
+
+        self.assertEqual(sf.f.getvalue(), sig_file)
