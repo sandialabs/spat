@@ -45,8 +45,6 @@ from spat import sigfile
 class SigFileUnitTests(TestCase):
     'sigfile unit tests'
 
-    magna_carta = 'birdseeddirtfeet'
-
     @patch('spat.sigfile.SigFile.open')
     def test_init(self, m_open):
         fn = 'foo'; nb = 42; md='bar'
