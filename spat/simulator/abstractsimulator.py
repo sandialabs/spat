@@ -34,31 +34,47 @@ __version__ = "1.2"
 
 __author__ = "Ryan Helinski and Mitch Martin"
 
-import os, bitstring, random
-from spat.bitstringutils import *
+import os
+import random
+import logging
 import xml.etree.ElementTree as etree
+import bitstring
+from spat.bitstringutils import *
+
+_log = logging.getLogger('spat')
 
 class AbstractSimulator(object):
     """An abstract class for PUF simulators."""
 
-    def __init__(self, nb=1024):
-        self.nb = nb
+    def __init__(self, n_bits=1024):
+        self.n_bits = n_bits
         self.bit_flips = None
-        self.setupFile = 'data/Simulator/simulator_setup.xml'
-        if (not os.path.isdir(os.path.dirname(self.setupFile))):
-            os.makedirs(os.path.dirname(self.setupFile))
+        self.setup_file = 'data/Simulator/simulator_setup.xml'
+        setup_dir = os.path.dirname(self.setup_file)
+        if (not os.path.isdir(setup_dir)):
+            os.makedirs(setup_dir)
 
-    def setup(self, param_mu=10, param_sd=0.00001, noise_mu=0, noise_sd=0.025, numVirtChips=32):
-        self.params = {'param_mu':param_mu, 'param_sd':param_sd, 'noise_mu':noise_mu, 'noise_sd':noise_sd}
-        if (os.path.isfile(self.setupFile)):
+    def setup(self,
+              param_mu=10,
+              param_sd=0.00001,
+              noise_mu=0,
+              noise_sd=0.025,
+              numVirtChips=32):
+        self.params = {
+            'param_mu':param_mu,
+            'param_sd':param_sd,
+            'noise_mu':noise_mu,
+            'noise_sd':noise_sd
+            }
+        if (os.path.isfile(self.setup_file)):
             self.loadFromFile()
         else:
-            self.generateSetup()
-        print "Done."
+            self.generateSetup(numVirtChips)
+        _log.info("Setup complete.")
 
     def loadFromFile(self):
-        print "Loading simulator state... ",
-        mytree = etree.parse(self.setupFile)
+        _log.info("Loading simulator setup... ")
+        mytree = etree.parse(self.setup_file)
         myroot = mytree.getroot()
 
         self.realValues = []
@@ -76,15 +92,17 @@ class AbstractSimulator(object):
                         self.realValues.append(chipRealValues)
         self.numVirtChips = len(self.realValues)
         self.numElements = len(self.realValues[0])
+        _log.info('Simulator state loaded.')
 
-    def generateSetup(self):
+    def generateSetup(self, numVirtChips):
         raise NotImplemented()
 
     def close(self):
         """For compatibility with other bit sources"""
-        return True
+        return
 
-    def getChipName(self, index):
+    @staticmethod
+    def getChipName(index):
         return 'v%03d' % (index+1)
 
     def makeSigFile (self, sigFile='simulator_sigs.xml'):
@@ -92,7 +110,10 @@ class AbstractSimulator(object):
         chipListEl.text = "\n"
         chipListEl.tail = "\n"
         for index in range(self.numVirtChips):
-            chipEl = etree.SubElement(chipListEl, 'chip', attrib={'name':self.getChipName(index)})
+            chipEl = etree.SubElement(
+                chipListEl,
+                'chip',
+                attrib={'name':self.getChipName(index)})
             chipEl.text = "\n"
             chipEl.tail = "\n"
             sigEl = etree.SubElement(chipEl, 'sig', attrib={'encoding':'hex'})
@@ -129,7 +150,7 @@ class AbstractSimulator(object):
             print 'Measuring chip # %d %d times' % (ci, numMeas)
             for ri in range(numMeas):
                 sig = self.next(ci)
-                chipIdentifier.process_sig(self.getChipName(ci), sig)
+                chipIdentifier.process_sig(getChipName(ci), sig)
             w.step()
             dlg.update()
         w.stop()

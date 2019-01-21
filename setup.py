@@ -43,6 +43,10 @@ if int(platform.python_version_tuple()[0]) < 3:
     requires.extend(['unittest2', 'mock'])
     test_requires.extend(['unittest2', 'mock'])
 
+package_data = {
+    'spat.tests': 'data/*.xml'
+    }
+
 setup(
     name = "spat",
     version = "1.3-dev",
