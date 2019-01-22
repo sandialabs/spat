@@ -8,5 +8,7 @@ cache:
 python:
   - "2.7"
   - "3.6"
+install:
+  - echo "Should be handled by setuptools"
 script:
   - python setup.py test
