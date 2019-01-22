@@ -1,0 +1,17 @@
+<xml encoding="UTF-8" version="1.0">
+<setup noise_mu="0" noise_sd="0.1" param_mu="13" param_sd="5" />
+<virtchip name="t001">
+    <realvalues>
+        <value>1</value>
+        <value>2</value>
+        <value>3</value>
+    </realvalues>
+</virtchip>
+<virtchip name="t002">
+    <realvalues>
+        <value>7</value>
+        <value>11</value>
+        <value>17</value>
+    </realvalues>
+</virtchip>
+</xml>
