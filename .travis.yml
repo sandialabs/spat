@@ -1,0 +1,12 @@
+language: python
+
+cache:
+  apt: true
+  directories:
+    - $HOME/.cache/pip
+    - $HOME/download
+python:
+  - "2.7"
+  - "3.6"
+script:
+  - python setup.py test
