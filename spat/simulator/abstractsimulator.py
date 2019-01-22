@@ -166,8 +166,8 @@ def NoiseWorker(argTuple):
     mySim.setup()
     enrollment = mySim.next(chipIndex)
     noise_hds = [hd(enrollment, mySim.next(chipIndex)) for measIndex in range(iterations)]
-    print "Chip v%03d (of %d): %d / %d = %0.3f %%" % (chipIndex+1, mySim.numVirtChips, sum(noise_hds), iterations * mySim.nb, (100 * float(sum(noise_hds)) / iterations / mySim.nb))
-    return float(sum(noise_hds)) / iterations / mySim.nb
+    print "Chip v%03d (of %d): %d / %d = %0.3f %%" % (chipIndex+1, mySim.numVirtChips, sum(noise_hds), iterations * mySim.n_bits, (100 * float(sum(noise_hds)) / iterations / mySim.n_bits))
+    return float(sum(noise_hds)) / iterations / mySim.n_bits
 
 # A self-test routine that characterizes the population statistics resulting from the setup parameters
 if __name__=="__main__":
