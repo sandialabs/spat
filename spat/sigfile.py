@@ -65,7 +65,7 @@ class SigFile(object):
 
     def next(self):
         def getdata():
-            return bytes(self.f.read(self.n_bits/8))
+            return bytes(self.f.read(int(self.n_bits/8)))
 
         bindata = getdata()
         if (len(bindata) < self.n_bits/8):
