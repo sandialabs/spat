@@ -36,7 +36,7 @@ except ImportError:
 try:
     from StringIO import StringIO
 except ImportError:
-    from io import StringIO
+    from io import BytesIO as StringIO
 import os
 
 from bitstring import Bits
@@ -100,13 +100,13 @@ class SigFileUnitTests(TestCase):
         with patch(('builtins' if PY3 else '__builtin__') + '.open',
                mock_open(read_data='chair')) as m_open:
             sf = sigfile.SigFile('/path/to/foo', 24)
-        with patch.object(sf.f, 'read', MagicMock(side_effect=['foo', 'bar', 'no', 'baz'])):
+        with patch.object(sf.f, 'read', MagicMock(side_effect=[b'foo', b'bar', b'no', b'baz'])):
             retval = sf.next()
-            self.assertEqual(retval, Bits(bytes='foo'))
+            self.assertEqual(retval, Bits(bytes=b'foo'))
             retval = sf.next()
-            self.assertEqual(retval, Bits(bytes='bar'))
+            self.assertEqual(retval, Bits(bytes=b'bar'))
             retval = sf.next()
-            self.assertEqual(retval, Bits(bytes='baz'))
+            self.assertEqual(retval, Bits(bytes=b'baz'))
             sf.f.seek.assert_called_once_with(0)
 
     def test_append_closed(self):
@@ -179,7 +179,7 @@ class SigFileIntegrationTests(TestCase):
             sf = sigfile.SigFile('/path/to/foo', n_bits=self.n_bits)
         sf.f = StringIO()
         sf.f.mode = 'ab'
-        sig_file = ''
+        sig_file = b''
 
         for i in range(self.n_sigs):
             sig = os.urandom(self.n_bits>>3)

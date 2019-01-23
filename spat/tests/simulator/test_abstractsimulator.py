@@ -137,17 +137,17 @@ class AbstractSimulatorUnitTests(TestCase):
             m_next.return_value.hex = 'foo'
             sim.makeSigFile('bar')
 
-        m_open.assert_called_with('bar', 'w')
+        m_open.assert_called_with('bar', 'wb')
         m_open().write.assert_called_with(
-            '<?xml version="1.0" encoding="UTF-8" ?>\n'
-            '<chip_list>\n'
-            '<chip name="v001">\n'
-            '<sig encoding="hex">foo</sig>\n'
-            '</chip>\n'
-            '<chip name="v002">\n'
-            '<sig encoding="hex">foo</sig>\n'
-            '</chip>\n'
-            '</chip_list>\n')
+            b'<?xml version="1.0" encoding="UTF-8" ?>\n'
+            b'<chip_list>\n'
+            b'<chip name="v001">\n'
+            b'<sig encoding="hex">foo</sig>\n'
+            b'</chip>\n'
+            b'<chip name="v002">\n'
+            b'<sig encoding="hex">foo</sig>\n'
+            b'</chip>\n'
+            b'</chip_list>\n')
         m_open().close.assert_called()
 
     def test_getSetupStr(self):

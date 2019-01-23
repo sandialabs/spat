@@ -123,9 +123,8 @@ class AbstractSimulator(object):
         xmlparent = os.path.split(sigFile)[0]
         if not os.path.isdir(xmlparent):
             os.makedirs(xmlparent)
-        xmlfile = open(sigFile, 'w')
-        xmlfile.write('<?xml version="1.0" encoding="UTF-8" ?>\n' + etree.tostring(chipListEl))
-        xmlfile.flush()
+        xmlfile = open(sigFile, 'wb')
+        xmlfile.write(b'<?xml version="1.0" encoding="UTF-8" ?>\n' + etree.tostring(chipListEl))
         xmlfile.close()
 
     def getSetupStr(self):
