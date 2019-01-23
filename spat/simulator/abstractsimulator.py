@@ -146,7 +146,7 @@ class AbstractSimulator(object):
         w = ttk.Progressbar(dlg, maximum=self.numVirtChips)
         w.pack()
         for ci in range(self.numVirtChips):
-            print 'Measuring chip # %d %d times' % (ci, numMeas)
+            print('Measuring chip # %d %d times' % (ci, numMeas))
             for ri in range(numMeas):
                 sig = self.next(ci)
                 chipIdentifier.process_sig(getChipName(ci), sig)
@@ -165,19 +165,20 @@ def NoiseWorker(argTuple):
     mySim.setup()
     enrollment = mySim.next(chipIndex)
     noise_hds = [hd(enrollment, mySim.next(chipIndex)) for measIndex in range(iterations)]
-    print "Chip v%03d (of %d): %d / %d = %0.3f %%" % (chipIndex+1, mySim.numVirtChips, sum(noise_hds), iterations * mySim.n_bits, (100 * float(sum(noise_hds)) / iterations / mySim.n_bits))
+    print("Chip v%03d (of %d): %d / %d = %0.3f %%" % (chipIndex+1, mySim.numVirtChips, sum(noise_hds), iterations * mySim.n_bits, (100 * float(sum(noise_hds)) / iterations / mySim.n_bits)))
     return float(sum(noise_hds)) / iterations / mySim.n_bits
 
 # A self-test routine that characterizes the population statistics resulting from the setup parameters
 if __name__=="__main__":
+# TODO move this to a test
     import multiprocessing, itertools
-    print "Running self-test"
+    print("Running self-test")
     mySim = AbstractSimulator()
     mySim.setup() # setup with defaults
     p = multiprocessing.Pool(multiprocessing.cpu_count())
     argIter = itertools.izip(range(mySim.numVirtChips), itertools.repeat(2 ** 6))
     results = p.map(NoiseWorker, argIter)
     
-    print "Average noise Hamming distance: %f" % (sum(results) / mySim.numVirtChips)
-    print "Test done"
+    print("Average noise Hamming distance: %f" % (sum(results) / mySim.numVirtChips))
+    print("Test done")
 
