@@ -55,7 +55,7 @@ class SigFile(object):
     
     def open(self, mode='r'):
         if mode not in self.mode_map.keys():
-            raise ValueError('Mode needs to be one of \'r\' or \'a\'')
+            raise ValueError('Mode needs to be one of '+' or '.join(self.mode_map.keys()))
 
         dirname = os.path.dirname(self.fileName)
         if not os.path.isdir(dirname):
