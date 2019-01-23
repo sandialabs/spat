@@ -135,7 +135,7 @@ class AbstractSimulator(object):
         return random.normalvariate(self.params['noise_mu'], self.params['noise_sd'])
 
     def next(self, virtChipIndex=0):
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def characterize(self, chipIdentifier, numMeas=32):
         import ttk, Tkinter

@@ -165,3 +165,8 @@ class AbstractSimulatorUnitTests(TestCase):
 
         m_normvar.assert_called_with(sim.params['noise_mu'], sim.params['noise_sd'])
         self.assertEqual(retval, m_normvar())
+
+    def test_next(self):
+        sim = self.makeMockSimulator()
+        with self.assertRaises(NotImplementedError):
+            sim.next()
