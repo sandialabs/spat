@@ -131,6 +131,10 @@ class AbstractSimulatorUnitTests(TestCase):
             sim = self.target_class()
         self.assertEqual(sim.getChipName(5), 'v006')
 
+    def test_generateSetup(self):
+        sim = self.makeMockSimulator()
+        self.assertRaises(NotImplementedError, sim.generateSetup)
+
     def test_makeSigFile(self):
         sim = self.makeMockSimulator()
         
@@ -172,5 +176,5 @@ class AbstractSimulatorUnitTests(TestCase):
 
     def test_next(self):
         sim = self.makeMockSimulator()
-        with self.assertRaises(NotImplementedError):
-            sim.next()
+        self.assertRaises(NotImplementedError, sim.next)
+

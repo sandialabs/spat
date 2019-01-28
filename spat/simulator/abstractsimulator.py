@@ -95,7 +95,7 @@ class AbstractSimulator(object):
         _log.info('Simulator state loaded.')
 
     def generateSetup(self):
-        raise NotImplemented()
+        raise NotImplementedError()
 
     def close(self):
         """For compatibility with other bit sources"""

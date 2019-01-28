@@ -85,5 +85,8 @@ class ROPUFSimulatorUnitTests(AbstractSimulatorUnitTests):
         m_progressbar().stop.assert_called()
         m_toplevel().destroy.assert_called()
 
+    def test_generateSetup(self):
+        pass
+
     def test_next(self):
         pass
