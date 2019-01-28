@@ -69,7 +69,7 @@ class AbstractSimulator(object):
         if (os.path.isfile(self.setup_file)):
             self.loadFromFile()
         else:
-            self.generateSetup(numVirtChips)
+            self.generateSetup()
         _log.info("Setup complete.")
 
     def loadFromFile(self):
@@ -94,7 +94,7 @@ class AbstractSimulator(object):
         self.numElements = len(self.realValues[0])
         _log.info('Simulator state loaded.')
 
-    def generateSetup(self, numVirtChips):
+    def generateSetup(self):
         raise NotImplemented()
 
     def close(self):
