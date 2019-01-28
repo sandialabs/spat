@@ -1,4 +1,5 @@
 #!/usr/local/bin/python
+from __future__ import print_function
 """
 simulator.py - A class that simulates a sample of PUFs. Currently, the Ring
 Oscillator PUF is modeled. Mean oscillator frequencies are first created for a
@@ -59,10 +60,10 @@ class Simulator(AbstractSimulator):
         else:
             self.generateSetup()
 
-        print "Done."
+        print("Done.")
 
     def generateSetup(self):
-        print "Generating virtual chips...", 
+        print("Generating virtual chips...", end='')
         self.numElements = self.n_bits + 1
         self.realValues = [[random.normalvariate(self.params['param_mu'], self.params['param_sd']) for index in range(self.numElements)] for chip in range(self.numVirtChips)]
         self.chipNames = [('v%03d' % (index + 1)) for index in range(self.numVirtChips)]
@@ -118,7 +119,7 @@ def NoiseWorker(argTuple):
     mySim.setup()
     enrollment = mySim.next(chipIndex)
     noise_hds = [hd(enrollment, mySim.next(chipIndex)) for measIndex in range(iterations)]
-    print "Chip v%03d (of %d): %d / %d = %0.3f %%" % (chipIndex+1, mySim.numVirtChips, sum(noise_hds), iterations * mySim.n_bits, (100 * float(sum(noise_hds)) / iterations / mySim.n_bits))
+    print("Chip v%03d (of %d): %d / %d = %0.3f %%" % (chipIndex+1, mySim.numVirtChips, sum(noise_hds), iterations * mySim.n_bits, (100 * float(sum(noise_hds)) / iterations / mySim.n_bits)))
     return float(sum(noise_hds)) / iterations / mySim.n_bits
 
 # A self-test routine that characterizes the population statistics
@@ -130,13 +131,13 @@ def NoiseWorker(argTuple):
 #
 if __name__=="__main__":
     import multiprocessing, itertools
-    print "Running self-test"
+    print("Running self-test")
     mySim = Simulator()
     mySim.setup() # setup with defaults
     p = multiprocessing.Pool(multiprocessing.cpu_count())
     argIter = itertools.izip(range(mySim.numVirtChips), itertools.repeat(2 ** 6))
     results = p.map(NoiseWorker, argIter)
     
-    print "Average noise Hamming distance: %f" % (sum(results) / mySim.numVirtChips)
-    print "Test done"
+    print("Average noise Hamming distance: %f" % (sum(results) / mySim.numVirtChips))
+    print("Test done")
 
