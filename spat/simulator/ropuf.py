@@ -45,7 +45,7 @@ import os, random
 import bitstring
 from spat.bitstringutils import *
 import xml.etree.ElementTree as etree
-from abstractsimulator import AbstractSimulator
+from spat.simulator.abstractsimulator import AbstractSimulator
 
 class Simulator(AbstractSimulator):
     """A PUF-simulating class. Produces simulated PUF responses."""
