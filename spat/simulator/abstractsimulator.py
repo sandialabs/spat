@@ -138,7 +138,10 @@ class AbstractSimulator(object):
         raise NotImplementedError()
 
     def characterize(self, chipIdentifier, numMeas=32):
-        import ttk
+        try:
+            from tkinter import ttk
+        except ImportError:
+            import ttk
         try:
             import tkinter
         except ImportError:

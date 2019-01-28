@@ -38,6 +38,7 @@ try:
 except ImportError:
     from io import StringIO
 import os
+import sys
 import xml.etree.ElementTree as etree
 import pkg_resources
 
@@ -56,9 +57,11 @@ class ROPUFSimulatorUnitTests(AbstractSimulatorUnitTests):
         sim = self.makeMockSimulator()
         cid = MagicMock()
 
-        with patch('Tkinter.Toplevel') as m_toplevel, \
-                patch('Tkinter.Label') as m_label, \
-                patch('ttk.Progressbar') as m_progressbar:
+        tkinter_pkg = ('T' if sys.version_info[0] < 3 else 't') + 'kinter'
+        ttk_pkg = ('' if sys.version_info[0] < 3 else 'tkinter.') + 'ttk'
+        with patch(tkinter_pkg + '.Toplevel') as m_toplevel, \
+                patch(tkinter_pkg + '.Label') as m_label, \
+                patch(ttk_pkg + '.Progressbar') as m_progressbar:
             sim.characterize(cid, 2)
 
         m_toplevel.assert_called()
