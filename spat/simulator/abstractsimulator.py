@@ -139,6 +139,7 @@ class AbstractSimulator(object):
 
     def characterize(self, chipIdentifier, numMeas=32):
         import ttk, Tkinter
+# TODO should not do TK stuff here, except for w.step and w.stop
         dlg = Tkinter.Toplevel()
         dlg.title("Simulator Progress")
         l = Tkinter.Label(dlg, text="Measuring each chip %d times" % numMeas)
