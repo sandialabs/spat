@@ -54,7 +54,7 @@ class Simulator(AbstractSimulator):
 
         self.params = {'param_mu':param_mu, 'param_sd':param_sd, 'noise_mu':noise_mu, 'noise_sd':noise_sd}
         self.numVirtChips = numVirtChips
-        if (os.path.isfile(self.setupFile)):
+        if (os.path.isfile(self.setup_file)):
             self.loadFromFile()
         else:
             self.generateSetup()
@@ -83,7 +83,7 @@ class Simulator(AbstractSimulator):
                 child.text = str(param)
                 child.tail = "\n"
 
-        xmlfile = open(self.setupFile, 'w')
+        xmlfile = open(self.setup_file, 'w')
         xmlfile.write(etree.tostring(myxml))
         xmlfile.flush()
         xmlfile.close()
