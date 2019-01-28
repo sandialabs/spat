@@ -107,6 +107,8 @@ class Simulator(AbstractSimulator):
 
         return bits
 
+# TODO replace this with a reference to NoiseWorker from abstractsimulator.py,
+# parameterize that on the class type
 def NoiseWorker(argTuple):
     """Measure one of the chips multiple times. For use with multiprocessor.pool """
 
