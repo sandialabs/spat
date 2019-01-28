@@ -41,7 +41,7 @@ import os
 import xml.etree.ElementTree as etree
 import pkg_resources
 
-from bitstring import Bits
+from bitstring import Bits, BitArray
 from spat.simulator.ropuf import Simulator, NoiseWorker
 from spat.tests.simulator.test_abstractsimulator import AbstractSimulatorUnitTests
 
@@ -54,13 +54,36 @@ class ROPUFSimulatorUnitTests(AbstractSimulatorUnitTests):
 
     def test_characterize(self):
         sim = self.makeMockSimulator()
+        cid = MagicMock()
 
         with patch('Tkinter.Toplevel') as m_toplevel, \
                 patch('Tkinter.Label') as m_label, \
                 patch('ttk.Progressbar') as m_progressbar:
-            sim.characterize('chip', 2)
+            sim.characterize(cid, 2)
 
-            import pdb; pdb.set_trace()
+        m_toplevel.assert_called()
+        m_toplevel().title.assert_called()
+        self.assertEqual(m_label.call_args[0][0], m_toplevel())
+        self.assertIn('Measuring', m_label.call_args[1]['text'])
+        m_label().pack.assert_called()
+        m_progressbar.assert_called_with(m_toplevel(), maximum=sim.numVirtChips)
+        m_progressbar().pack.assert_called()
+
+        cid.process_sig.assert_has_calls([
+            call('v001', BitArray('0b11')),
+            call('v001', BitArray('0b11')),
+            call('v002', BitArray('0b11')),
+            call('v002', BitArray('0b11'))])
+
+        m_progressbar().step.assert_has_calls([
+            call(),
+            call()])
+        m_toplevel().update.assert_has_calls([
+            call(),
+            call()])
+
+        m_progressbar().stop.assert_called()
+        m_toplevel().destroy.assert_called()
 
     def test_next(self):
         pass
