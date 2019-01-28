@@ -63,7 +63,7 @@ class Simulator(AbstractSimulator):
 
     def generateSetup(self):
         print "Generating virtual chips...", 
-        self.numElements = self.nb + 1
+        self.numElements = self.n_bits + 1
         self.realValues = [[random.normalvariate(self.params['param_mu'], self.params['param_sd']) for index in range(self.numElements)] for chip in range(self.numVirtChips)]
         self.chipNames = [('v%03d' % (index + 1)) for index in range(self.numVirtChips)]
 
@@ -94,13 +94,13 @@ class Simulator(AbstractSimulator):
             virtChipIndex = int(virtChipIndex[1:4]) - 1
         bits = bitstring.BitArray()
 
-        noiseValues = [self.noise() for i in range(self.nb+1)]
+        noiseValues = [self.noise() for i in range(self.n_bits+1)]
         # This is the linear RO PUF architecture which avoids redundant 
         # bits which are inherent in the all possible combinations approach
         # i.e., comparisons a ? b and b ? c may render a ? c redundant
         # Instead, we use (NB + 1) ring oscillators and only compare adjacent 
         # oscillators (i) and (i+1) for i in (0, NB).
-        for i in range(0, self.nb):
+        for i in range(0, self.n_bits):
             lhs = self.realValues[virtChipIndex][i] + noiseValues[i]
             rhs = self.realValues[virtChipIndex][i+1] + noiseValues[i+1]
             bits.append(bitstring.Bits(bool=(lhs < rhs)))
@@ -116,8 +116,8 @@ def NoiseWorker(argTuple):
     mySim.setup()
     enrollment = mySim.next(chipIndex)
     noise_hds = [hd(enrollment, mySim.next(chipIndex)) for measIndex in range(iterations)]
-    print "Chip v%03d (of %d): %d / %d = %0.3f %%" % (chipIndex+1, mySim.numVirtChips, sum(noise_hds), iterations * mySim.nb, (100 * float(sum(noise_hds)) / iterations / mySim.nb))
-    return float(sum(noise_hds)) / iterations / mySim.nb
+    print "Chip v%03d (of %d): %d / %d = %0.3f %%" % (chipIndex+1, mySim.numVirtChips, sum(noise_hds), iterations * mySim.n_bits, (100 * float(sum(noise_hds)) / iterations / mySim.n_bits))
+    return float(sum(noise_hds)) / iterations / mySim.n_bits
 
 # A self-test routine that characterizes the population statistics
 # resulting from the setup parameters
