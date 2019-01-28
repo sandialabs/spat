@@ -138,11 +138,15 @@ class AbstractSimulator(object):
         raise NotImplementedError()
 
     def characterize(self, chipIdentifier, numMeas=32):
-        import ttk, Tkinter
+        import ttk
+        try:
+            import tkinter
+        except ImportError:
+            import Tkinter as tkinter
 # TODO should not do TK stuff here, except for w.step and w.stop
-        dlg = Tkinter.Toplevel()
+        dlg = tkinter.Toplevel()
         dlg.title("Simulator Progress")
-        l = Tkinter.Label(dlg, text="Measuring each chip %d times" % numMeas)
+        l = tkinter.Label(dlg, text="Measuring each chip %d times" % numMeas)
         l.pack()
         w = ttk.Progressbar(dlg, maximum=self.numVirtChips)
         w.pack()
