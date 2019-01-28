@@ -93,7 +93,7 @@ class AbstractSimulatorUnitTests(TestCase):
             'noise_sd': 5
         })
         m_isfile.assert_called_with(o.setup_file)
-        m_generateSetup.assert_called_with(7)
+        m_generateSetup.assert_called_with()
 
     def makeMockSimulator(self):
         ex_file_path = pkg_resources.resource_filename('spat.tests', 'data/example_setup.xml')
@@ -104,6 +104,7 @@ class AbstractSimulatorUnitTests(TestCase):
             sim = self.target_class()
 
         sim.setup_file = 'foo'
+        sim.n_bits = 2
         with patch('xml.etree.ElementTree.parse', return_value=obj) as m_parse:
             sim.loadFromFile()
 
