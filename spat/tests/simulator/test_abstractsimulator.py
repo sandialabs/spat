@@ -46,14 +46,17 @@ from spat.simulator.abstractsimulator import AbstractSimulator, NoiseWorker
 
 
 class AbstractSimulatorUnitTests(TestCase):
-    'sigfile unit tests'
+    'Unit tests for the spat.simulator.abstractsimulator.AbstractSimulator class'
+
+    target_class_path = 'spat.simulator.abstractsimulator.AbstractSimulator'
+    target_class = AbstractSimulator
 
     @patch('os.path.isdir')
     @patch('os.makedirs')
     def test_init(self, m_makedirs, m_isdir):
         m_isdir.return_value = False
 
-        o = AbstractSimulator(36)
+        o = self.target_class(36)
 
         self.assertEqual(o.n_bits, 36)
         self.assertIsNone(o.bit_flips)
@@ -65,7 +68,7 @@ class AbstractSimulatorUnitTests(TestCase):
     def test_setup(self, m_isfile):
         m_isfile.return_value = True
 
-        o = AbstractSimulator()
+        o = self.target_class()
         with patch.object(o, 'loadFromFile') as m_loadFromFile:
             o.setup(1, 2, 3, 5, 7)
 
@@ -96,9 +99,9 @@ class AbstractSimulatorUnitTests(TestCase):
         ex_file_path = pkg_resources.resource_filename('spat.tests', 'data/example_setup.xml')
         obj = etree.parse(ex_file_path)
 
-        with patch('spat.simulator.abstractsimulator.AbstractSimulator.__init__',
+        with patch(self.target_class_path+'.__init__',
                 return_value=None) as m_init:
-            sim = AbstractSimulator()
+            sim = self.target_class()
 
         sim.setup_file = 'foo'
         with patch('xml.etree.ElementTree.parse', return_value=obj) as m_parse:
@@ -124,7 +127,7 @@ class AbstractSimulatorUnitTests(TestCase):
     def test_getChipName(self):
         with patch('spat.simulator.abstractsimulator.AbstractSimulator.__init__',
                 return_value=None) as m_init:
-            sim = AbstractSimulator()
+            sim = self.target_class()
         self.assertEqual(sim.getChipName(5), 'v006')
 
     def test_makeSigFile(self):
