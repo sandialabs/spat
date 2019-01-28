@@ -150,7 +150,7 @@ class AbstractSimulator(object):
             print('Measuring chip # %d %d times' % (ci, numMeas))
             for ri in range(numMeas):
                 sig = self.next(ci)
-                chipIdentifier.process_sig(getChipName(ci), sig)
+                chipIdentifier.process_sig(self.getChipName(ci), sig)
             w.step()
             dlg.update()
         w.stop()
