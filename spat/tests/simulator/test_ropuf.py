@@ -61,7 +61,8 @@ class ROPUFSimulatorUnitTests(AbstractSimulatorUnitTests):
         ttk_pkg = ('' if sys.version_info[0] < 3 else 'tkinter.') + 'ttk'
         with patch(tkinter_pkg + '.Toplevel') as m_toplevel, \
                 patch(tkinter_pkg + '.Label') as m_label, \
-                patch(ttk_pkg + '.Progressbar') as m_progressbar:
+                patch(ttk_pkg + '.Progressbar') as m_progressbar, \
+                patch('__builtin__.print') as m_print:
             sim.characterize(cid, 2)
 
         m_toplevel.assert_called()

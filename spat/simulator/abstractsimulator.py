@@ -1,4 +1,5 @@
 #!/usr/local/bin/python
+from __future__ import print_function
 """
 abstractsimulator.py - A class that simulates a sample of PUFs. 
 This file serves as an abstract type from which actual simulator
@@ -35,6 +36,7 @@ __version__ = "1.2"
 __author__ = "Ryan Helinski and Mitch Martin"
 
 import os
+import sys
 import random
 import logging
 import xml.etree.ElementTree as etree
@@ -138,14 +140,12 @@ class AbstractSimulator(object):
         raise NotImplementedError()
 
     def characterize(self, chipIdentifier, numMeas=32):
-        try:
-            from tkinter import ttk
-        except ImportError:
+        if sys.version_info[0] < 3:
             import ttk
-        try:
-            import tkinter
-        except ImportError:
             import Tkinter as tkinter
+        else:
+            from tkinter import ttk
+            import tkinter
 # TODO should not do TK stuff here, except for w.step and w.stop
         dlg = tkinter.Toplevel()
         dlg.title("Simulator Progress")

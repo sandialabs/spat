@@ -69,7 +69,8 @@ class AbstractSimulatorUnitTests(TestCase):
         m_isfile.return_value = True
 
         o = self.target_class()
-        with patch.object(o, 'loadFromFile') as m_loadFromFile:
+        with patch.object(o, 'loadFromFile') as m_loadFromFile, \
+            patch('__builtin__.print') as m_print:
             o.setup(1, 2, 3, 5, 7)
 
         self.assertEqual(o.params, {
@@ -83,7 +84,8 @@ class AbstractSimulatorUnitTests(TestCase):
 
         m_isfile.return_value = False
 
-        with patch.object(o, 'generateSetup') as m_generateSetup:
+        with patch.object(o, 'generateSetup') as m_generateSetup, \
+            patch('__builtin__.print') as m_print:
             o.setup(1, 2, 3, 5, 7)
 
         self.assertEqual(o.params, {
