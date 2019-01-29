@@ -53,7 +53,7 @@ available from the Python Software Foundation at:
 
 The following packages for Python are required for additional features:
 
-    numpy matplotlib scipy
+    tkinter numpy matplotlib scipy
 
 These packages are available on most GNU/Linux distributions. Unofficial Windows
 binaries for these packages are available from UCI at:
@@ -82,6 +82,10 @@ have to be edited if you installed Python 2.7 to a non-standard location. Just
 double-click:
 
     spat.bat
+
+### Ubuntu
+
+  > apt install python python-pip python-tk
 
 
 Tutorial
