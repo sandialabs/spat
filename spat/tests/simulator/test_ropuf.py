@@ -54,23 +54,23 @@ class ROPUFSimulatorUnitTests(AbstractSimulatorUnitTests):
     target_class = Simulator
 
     def test_characterize(self):
-        sim = self.makeMockSimulator()
         cid = MagicMock()
 
         tkinter_pkg = ('T' if sys.version_info[0] < 3 else 't') + 'kinter'
         ttk_pkg = ('' if sys.version_info[0] < 3 else 'tkinter.') + 'ttk'
+        builtin_pkg = '__builtin__' if sys.version_info[0] < 3 else 'builtins'
         with patch(tkinter_pkg + '.Toplevel') as m_toplevel, \
                 patch(tkinter_pkg + '.Label') as m_label, \
                 patch(ttk_pkg + '.Progressbar') as m_progressbar, \
-                patch('__builtin__.print') as m_print:
-            sim.characterize(cid, 2)
+                patch(builtin_pkg+'.print') as m_print:
+            self.sim.characterize(cid, 2)
 
         m_toplevel.assert_called()
         m_toplevel().title.assert_called()
         self.assertEqual(m_label.call_args[0][0], m_toplevel())
         self.assertIn('Measuring', m_label.call_args[1]['text'])
         m_label().pack.assert_called()
-        m_progressbar.assert_called_with(m_toplevel(), maximum=sim.numVirtChips)
+        m_progressbar.assert_called_with(m_toplevel(), maximum=self.sim.numVirtChips)
         m_progressbar().pack.assert_called()
 
         cid.process_sig.assert_has_calls([

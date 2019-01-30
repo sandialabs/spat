@@ -24,6 +24,7 @@ Tests for module spat.simulator.abstractsimulator
 '''
 
 from __future__ import print_function
+import sys
 try:
     from unittest.mock import patch, call, MagicMock, mock_open
     from unittest import TestCase, main, skipIf
@@ -67,10 +68,11 @@ class AbstractSimulatorUnitTests(TestCase):
     @patch('os.path.isfile')
     def test_setup(self, m_isfile):
         m_isfile.return_value = True
+        builtin_pkg = '__builtin__' if sys.version_info[0] < 3 else 'builtins'
 
         o = self.target_class()
         with patch.object(o, 'loadFromFile') as m_loadFromFile, \
-            patch('__builtin__.print') as m_print:
+            patch(builtin_pkg+'.print') as m_print:
             o.setup(1, 2, 3, 5, 7)
 
         self.assertEqual(o.params, {
@@ -85,7 +87,7 @@ class AbstractSimulatorUnitTests(TestCase):
         m_isfile.return_value = False
 
         with patch.object(o, 'generateSetup') as m_generateSetup, \
-            patch('__builtin__.print') as m_print:
+            patch(builtin_pkg+'.print') as m_print:
             o.setup(1, 2, 3, 5, 7)
 
         self.assertEqual(o.params, {
@@ -97,55 +99,51 @@ class AbstractSimulatorUnitTests(TestCase):
         m_isfile.assert_called_with(o.setup_file)
         m_generateSetup.assert_called_with()
 
-    def makeMockSimulator(self):
+    def setUp(self):
         ex_file_path = pkg_resources.resource_filename('spat.tests', 'data/example_setup.xml')
         obj = etree.parse(ex_file_path)
 
         with patch(self.target_class_path+'.__init__',
                 return_value=None) as m_init:
-            sim = self.target_class()
+            self.sim = self.target_class()
 
-        sim.setup_file = 'foo'
-        sim.n_bits = 2
+        self.sim.setup_file = 'foo'
+        self.sim.n_bits = 2
         with patch('xml.etree.ElementTree.parse', return_value=obj) as m_parse:
-            sim.loadFromFile()
+            self.sim.loadFromFile()
 
         m_parse.assert_called_with('foo')
 
-        return sim
-
     def test_loadFromFile(self):
-        sim = self.makeMockSimulator()
-
-        self.assertEqual(sim.realValues, [[1, 2, 3], [7, 11, 17]])
-        self.assertEqual(sim.chipNames, ['t001', 't002'])
-        self.assertEqual(sim.params,
+        self.assertEqual(self.sim.realValues, [[1, 2, 3], [7, 11, 17]])
+        self.assertEqual(self.sim.chipNames, ['t001', 't002'])
+        self.assertEqual(self.sim.params,
             {'noise_sd': 0.1,
              'param_mu': 13.0,
              'noise_mu': 0.0,
              'param_sd': 5.0})
-        self.assertEqual(sim.numVirtChips, 2)
-        self.assertEqual(sim.numElements, 3)
+        self.assertEqual(self.sim.numVirtChips, 2)
+        self.assertEqual(self.sim.numElements, 3)
 
     def test_getChipName(self):
         with patch('spat.simulator.abstractsimulator.AbstractSimulator.__init__',
                 return_value=None) as m_init:
-            sim = self.target_class()
-        self.assertEqual(sim.getChipName(5), 'v006')
+            self.sim = self.target_class()
+        self.assertEqual(self.sim.getChipName(5), 'v006')
 
     def test_generateSetup(self):
-        sim = self.makeMockSimulator()
-        self.assertRaises(NotImplementedError, sim.generateSetup)
+        self.assertRaises(NotImplementedError, self.sim.generateSetup)
+
+    def test_close(self):
+        self.assertIsNone(self.sim.close())
 
     def test_makeSigFile(self):
-        sim = self.makeMockSimulator()
-        
         with patch(('builtins' if PY3 else '__builtin__') + '.open',
                 new_callable=mock_open()) as m_open, \
             patch('os.makedirs') as m_makedirs, \
-            patch.object(sim, 'next') as m_next:
+            patch.object(self.sim, 'next') as m_next:
             m_next.return_value.hex = 'foo'
-            sim.makeSigFile('bar')
+            self.sim.makeSigFile('bar')
 
         m_open.assert_called_with('bar', 'wb')
         m_open().write.assert_called_with(
@@ -161,22 +159,19 @@ class AbstractSimulatorUnitTests(TestCase):
         m_open().close.assert_called()
 
     def test_getSetupStr(self):
-        sim = self.makeMockSimulator()
-
         self.assertEqual(
-            sim.getSetupStr(),
+            self.sim.getSetupStr(),
             'P_mu=13.0, P_sd=5.0, E_mu=0.000, E_sd=0.100')
 
     def test_noise(self):
-        sim = self.makeMockSimulator()
-
         with patch('random.normalvariate') as m_normvar:
-            retval = sim.noise()
+            retval = self.sim.noise()
 
-        m_normvar.assert_called_with(sim.params['noise_mu'], sim.params['noise_sd'])
+        m_normvar.assert_called_with(
+            self.sim.params['noise_mu'],
+            self.sim.params['noise_sd'])
         self.assertEqual(retval, m_normvar())
 
     def test_next(self):
-        sim = self.makeMockSimulator()
-        self.assertRaises(NotImplementedError, sim.next)
+        self.assertRaises(NotImplementedError, self.sim.next)
 
