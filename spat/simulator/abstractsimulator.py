@@ -58,10 +58,16 @@ class AbstractSimulator(object):
 
     def setup(self,
               param_mu=10,
-              param_sd=0.00001,
+              param_sd=1,
               noise_mu=0,
-              noise_sd=0.025,
-              numVirtChips=32):
+              noise_sd=0.0225,
+              numVirtChips=2**5):
+        """Generate the real values to which noise is added and the PUF
+        architecture is modelled to produce binary responses. The default
+        parameters have been selected to create an inter-chip response Hamming
+        distance of 50% of the number of bits and a noise Hamming distance of
+        1%. The front panel performs poorly when the number of virtual chips is
+        large. """
         self.params = {
             'param_mu':param_mu,
             'param_sd':param_sd,
@@ -71,6 +77,7 @@ class AbstractSimulator(object):
         if (os.path.isfile(self.setup_file)):
             self.loadFromFile()
         else:
+            self.numVirtChips = numVirtChips
             self.generateSetup()
         _log.info("Setup complete.")
 
