@@ -24,21 +24,17 @@ Tests for module spat.simulator.abstractsimulator
 '''
 
 from __future__ import print_function
-try:
+import sys
+if sys.version_info[0] > 2:
     from unittest.mock import patch, call, MagicMock, mock_open
     from unittest import TestCase, main, skipIf
-    PY3 = True
-except ImportError:
+    from StringIO import StringIO
+else:
     from mock import patch, call, MagicMock, mock_open
     from unittest2 import TestCase, main, skipIf
-    PY3 = False
-
-try:
-    from StringIO import StringIO
-except ImportError:
     from io import StringIO
+
 import os
-import sys
 import xml.etree.ElementTree as etree
 import pkg_resources
 from itertools import repeat, izip, combinations
