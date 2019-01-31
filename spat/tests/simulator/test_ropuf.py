@@ -111,7 +111,10 @@ class ROPUFSimulatorIntegrationTest(TestCase):
         argIter = zip(repeat(self.mySim), combinations(range(self.mySim.numVirtChips), 2))
         results = map(InterChipWorker, argIter)
 
-        avg_interchip_dist = sum(results) / len(results)
+        def mean(arr):
+            l = list(arr)
+            return sum(l) / len(l)
+        avg_interchip_dist = mean(results)
         print("Average inter-chip Hamming distance: %f" % (avg_interchip_dist))
 
         self.assertGreater(avg_interchip_dist, 0.4)
