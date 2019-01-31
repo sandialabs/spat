@@ -95,37 +95,3 @@ class Simulator(AbstractSimulator):
             bits.append(bitstring.Bits(bool=(lhs < rhs)))
 
         return bits
-
-# TODO replace this with a reference to NoiseWorker from abstractsimulator.py,
-# parameterize that on the class type
-def NoiseWorker(argTuple):
-    """Measure one of the chips multiple times. For use with multiprocessor.pool """
-
-    chipIndex, iterations = argTuple
-    # Instead of generating the number of iterations for each process, I could create my own iterator object and pass that in as the argument
-    mySim = Simulator()
-    mySim.setup()
-    enrollment = mySim.next(chipIndex)
-    noise_hds = [hd(enrollment, mySim.next(chipIndex)) for measIndex in range(iterations)]
-    print("Chip v%03d (of %d): %d / %d = %0.3f %%" % (chipIndex+1, mySim.numVirtChips, sum(noise_hds), iterations * mySim.n_bits, (100 * float(sum(noise_hds)) / iterations / mySim.n_bits)))
-    return float(sum(noise_hds)) / iterations / mySim.n_bits
-
-# A self-test routine that characterizes the population statistics
-# resulting from the setup parameters
-#
-# NOTE: When run this way, you MUST include the parent directory in
-# the PYTHONPATH environmental variable. For example:
-# export PYTHONPATH = ".."
-#
-if __name__=="__main__":
-    import multiprocessing, itertools
-    print("Running self-test")
-    mySim = Simulator()
-    mySim.setup() # setup with defaults
-    p = multiprocessing.Pool(multiprocessing.cpu_count())
-    argIter = itertools.izip(range(mySim.numVirtChips), itertools.repeat(2 ** 6))
-    results = p.map(NoiseWorker, argIter)
-    
-    print("Average noise Hamming distance: %f" % (sum(results) / mySim.numVirtChips))
-    print("Test done")
-

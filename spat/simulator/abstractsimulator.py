@@ -172,28 +172,26 @@ class AbstractSimulator(object):
 
 
 def NoiseWorker(argTuple):
-    """Measure one of the chips multiple times. For use with multiprocessor.pool """
-
-    chipIndex, iterations = argTuple
+    """
+    Measure one of the chips multiple times.
+    For use with map() or multiprocessor.Pool.map()
+    """
+    mySim, chipIndex, iterations = argTuple
     # Instead of generating the number of iterations for each process, I could create my own iterator object and pass that in as the argument
-    mySim = AbstractSimulator()
-    mySim.setup()
     enrollment = mySim.next(chipIndex)
     noise_hds = [hd(enrollment, mySim.next(chipIndex)) for measIndex in range(iterations)]
     print("Chip v%03d (of %d): %d / %d = %0.3f %%" % (chipIndex+1, mySim.numVirtChips, sum(noise_hds), iterations * mySim.n_bits, (100 * float(sum(noise_hds)) / iterations / mySim.n_bits)))
     return float(sum(noise_hds)) / iterations / mySim.n_bits
 
-# A self-test routine that characterizes the population statistics resulting from the setup parameters
-if __name__=="__main__":
-# TODO move this to a test
-    import multiprocessing, itertools
-    print("Running self-test")
-    mySim = AbstractSimulator()
-    mySim.setup() # setup with defaults
-    p = multiprocessing.Pool(multiprocessing.cpu_count())
-    argIter = itertools.izip(range(mySim.numVirtChips), itertools.repeat(2 ** 6))
-    results = p.map(NoiseWorker, argIter)
-    
-    print("Average noise Hamming distance: %f" % (sum(results) / mySim.numVirtChips))
-    print("Test done")
-
+def InterChipWorker(argTuple):
+    """
+    Measure two chips and return their Hamming distance
+    For use with map() or multiprocessor.Pool.map()
+    """
+    mySim, chipIndexTuple = argTuple
+    chipIndexA, chipIndexB = chipIndexTuple
+    chipSigA = mySim.next(chipIndexA)
+    chipSigB = mySim.next(chipIndexB)
+    interchip_hd = hd(chipSigA, chipSigB)
+    print("Chip v%03d <-> v%03d (of %d): %0.3f %%" % (chipIndexA+1, chipIndexB+1, mySim.numVirtChips, interchip_hd))
+    return float(interchip_hd) / mySim.n_bits

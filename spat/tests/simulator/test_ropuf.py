@@ -41,9 +41,11 @@ import os
 import sys
 import xml.etree.ElementTree as etree
 import pkg_resources
+from itertools import repeat, izip, combinations
 
 from bitstring import Bits, BitArray
-from spat.simulator.ropuf import Simulator, NoiseWorker
+from spat.simulator.ropuf import Simulator
+from spat.simulator.abstractsimulator import NoiseWorker, InterChipWorker
 from spat.tests.simulator.test_abstractsimulator import AbstractSimulatorUnitTests
 
 
@@ -94,3 +96,37 @@ class ROPUFSimulatorUnitTests(AbstractSimulatorUnitTests):
 
     def test_next(self):
         pass
+
+class ROPUFSimulatorIntegrationTest(TestCase):
+    '''
+    A test that characterizes the population statistics
+    resulting from the default setup parameters
+    '''
+
+    def setUp(self):
+        self.mySim = Simulator(n_bits=2**7)
+        self.mySim.setup(numVirtChips=10) # setup with defaults
+
+    def test_interchip(self):
+        #import multiprocessing
+        #p = multiprocessing.Pool(multiprocessing.cpu_count())
+
+        argIter = izip(repeat(self.mySim), combinations(range(self.mySim.numVirtChips), 2))
+        results = map(InterChipWorker, argIter)
+
+        avg_interchip_dist = sum(results) / len(results)
+        print("Average inter-chip Hamming distance: %f" % (avg_interchip_dist))
+
+        self.assertGreater(avg_interchip_dist, 0.4)
+        self.assertLess(avg_interchip_dist, 0.6)
+
+    def test_noise(self):
+        argIter = izip(repeat(self.mySim), range(self.mySim.numVirtChips), repeat(2 ** 4))
+        #results = p.map(NoiseWorker, argIter)
+        results = map(NoiseWorker, argIter)
+
+        avg_noise_dist = sum(results) / self.mySim.numVirtChips
+        print("Average noise Hamming distance: %f" % (avg_noise_dist))
+        self.assertLess(avg_noise_dist, 0.1)
+
+        print("Test complete")
