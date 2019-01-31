@@ -28,16 +28,17 @@ import sys
 if sys.version_info[0] > 2:
     from unittest.mock import patch, call, MagicMock, mock_open
     from unittest import TestCase, main, skipIf
-    from StringIO import StringIO
+    from io import StringIO
 else:
     from mock import patch, call, MagicMock, mock_open
     from unittest2 import TestCase, main, skipIf
-    from io import StringIO
+    from StringIO import StringIO
+    from itertools import izip as zip
 
 import os
 import xml.etree.ElementTree as etree
 import pkg_resources
-from itertools import repeat, izip, combinations
+from itertools import repeat, combinations
 
 from bitstring import Bits, BitArray
 from spat.simulator.ropuf import Simulator
@@ -107,7 +108,7 @@ class ROPUFSimulatorIntegrationTest(TestCase):
         #import multiprocessing
         #p = multiprocessing.Pool(multiprocessing.cpu_count())
 
-        argIter = izip(repeat(self.mySim), combinations(range(self.mySim.numVirtChips), 2))
+        argIter = zip(repeat(self.mySim), combinations(range(self.mySim.numVirtChips), 2))
         results = map(InterChipWorker, argIter)
 
         avg_interchip_dist = sum(results) / len(results)
@@ -117,7 +118,7 @@ class ROPUFSimulatorIntegrationTest(TestCase):
         self.assertLess(avg_interchip_dist, 0.6)
 
     def test_noise(self):
-        argIter = izip(repeat(self.mySim), range(self.mySim.numVirtChips), repeat(2 ** 4))
+        argIter = zip(repeat(self.mySim), range(self.mySim.numVirtChips), repeat(2 ** 4))
         #results = p.map(NoiseWorker, argIter)
         results = map(NoiseWorker, argIter)
 
