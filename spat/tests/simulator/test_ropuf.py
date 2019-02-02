@@ -45,6 +45,10 @@ from spat.simulator.ropuf import Simulator
 from spat.simulator.abstractsimulator import NoiseWorker, InterChipWorker
 from spat.tests.simulator.test_abstractsimulator import AbstractSimulatorUnitTests
 
+tkinter_pkg = ('T' if sys.version_info[0] < 3 else 't') + 'kinter'
+ttk_pkg = ('' if sys.version_info[0] < 3 else 'tkinter.') + 'ttk'
+builtin_pkg = '__builtin__' if sys.version_info[0] < 3 else 'builtins'
+
 
 class ROPUFSimulatorUnitTests(AbstractSimulatorUnitTests):
     'Unit tests for the spat.simulator.ropuf.Simulator class'
@@ -55,9 +59,6 @@ class ROPUFSimulatorUnitTests(AbstractSimulatorUnitTests):
     def test_characterize(self):
         cid = MagicMock()
 
-        tkinter_pkg = ('T' if sys.version_info[0] < 3 else 't') + 'kinter'
-        ttk_pkg = ('' if sys.version_info[0] < 3 else 'tkinter.') + 'ttk'
-        builtin_pkg = '__builtin__' if sys.version_info[0] < 3 else 'builtins'
         with patch(tkinter_pkg + '.Toplevel') as m_toplevel, \
                 patch(tkinter_pkg + '.Label') as m_label, \
                 patch(ttk_pkg + '.Progressbar') as m_progressbar, \
