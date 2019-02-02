@@ -41,7 +41,8 @@ __version__ = "1.2"
 
 __author__ = "Ryan Helinski and Mitch Martin"
 
-import os, random
+import os
+import numpy
 import bitstring
 from spat.bitstringutils import *
 import xml.etree.ElementTree as etree
@@ -50,15 +51,21 @@ from spat.simulator.abstractsimulator import AbstractSimulator
 class Simulator(AbstractSimulator):
     """A PUF-simulating class. Produces simulated PUF responses."""
 
-    def generateSetup(self):
-        print("Generating virtual chips...", end='')
-        self.numElements = self.n_bits + 1
-        self.realValues = [[random.normalvariate(self.params['param_mu'], self.params['param_sd']) for index in range(self.numElements)] for chip in range(self.numVirtChips)]
-        self.chipNames = [('v%03d' % (index + 1)) for index in range(self.numVirtChips)]
+    def genRealValues(self):
+        return numpy.random.normal(
+                self.params['param_mu'],
+                self.params['param_sd'],
+                size=(self.numVirtChips, self.numElements))
 
+
+    def genSetupXML(self):
         myxml = etree.Element('xml', attrib={'version':'1.0', 'encoding':'UTF-8'})
         myxml.text = "\n"
-        setupEl = etree.SubElement(myxml, 'setup', attrib=dict(zip(self.params.keys(), [str(val) for val in self.params.values()])))
+        setupEl = etree.SubElement(
+                myxml,
+                'setup',
+                attrib=dict(zip(self.params.keys(),
+                                [str(val) for val in self.params.values()])))
         setupEl.tail = "\n"
         for index in range(self.numVirtChips):
             virtChipEl = etree.SubElement(myxml, 'virtchip', attrib={'name':self.chipNames[index]})
@@ -72,10 +79,21 @@ class Simulator(AbstractSimulator):
                 child.text = str(param)
                 child.tail = "\n"
 
-        xmlfile = open(self.setup_file, 'w')
-        xmlfile.write(etree.tostring(myxml))
-        xmlfile.flush()
-        xmlfile.close()
+        return etree.tostring(myxml)
+
+
+    def writeSetupFile(self):
+        with open(self.setup_file, 'wb') as xmlfile:
+            xmlfile.write(self.genSetupXML())
+
+
+    def generateSetup(self):
+        print("Generating virtual chips...", end='')
+        self.numElements = self.n_bits + 1
+        self.realValues = self.genRealValues()
+        self.chipNames = [('v%03d' % (index + 1)) for index in range(self.numVirtChips)]
+
+        self.writeSetupFile()
 
 
     def next(self, virtChipIndex=0):
