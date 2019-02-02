@@ -89,8 +89,60 @@ class ROPUFSimulatorUnitTests(AbstractSimulatorUnitTests):
         m_progressbar().stop.assert_called()
         m_toplevel().destroy.assert_called()
 
+
+    def test_genRealValues(self):
+        values = self.sim.genRealValues()
+        mu = values.mean()
+        sd = values.std()
+        self.assertGreater(mu, self.sim.params['param_mu']*0.1)
+        self.assertLess(mu, self.sim.params['param_mu']*10)
+        self.assertGreater(sd, self.sim.params['param_sd']*0.1)
+        self.assertLess(sd, self.sim.params['param_sd']*10)
+
+
+    def test_genSetupXML(self):
+        xml = self.sim.genSetupXML()
+        expected = b'''<xml encoding="UTF-8" version="1.0">
+<setup noise_mu="0.0" noise_sd="0.1" param_mu="13.0" param_sd="5.0" />
+<virtchip name="t001">
+<realvalues>
+<value>1.0</value>
+<value>2.0</value>
+<value>3.0</value>
+</realvalues>
+</virtchip>
+<virtchip name="t002">
+<realvalues>
+<value>7.0</value>
+<value>11.0</value>
+<value>17.0</value>
+</realvalues>
+</virtchip>
+</xml>'''
+        self.assertEqual(xml, expected)
+
+
+    def test_writeSetupFile(self):
+        with patch(builtin_pkg+'.open',
+                    mock_open(read_data='setup')) as m_open, \
+                patch.object(self.sim, 'genSetupXML') as m_genSetupXML:
+            self.sim.generateSetup()
+
+        m_open.assert_called_with(self.sim.setup_file, 'wb')
+        m_open().write.assert_called_with(m_genSetupXML())
+
+
     def test_generateSetup(self):
-        pass
+        with patch(builtin_pkg+'.print') as m_print, \
+                patch.object(self.sim, 'genRealValues') as m_genRealValues, \
+                patch.object(self.sim, 'writeSetupFile') as m_writeSetupFile:
+            self.sim.generateSetup()
+
+        m_print.assert_called()
+        self.assertIn('Generating', m_print.call_args_list[0][0][0])
+        m_genRealValues.assert_called()
+        m_writeSetupFile.assert_called()
+
 
     def test_next(self):
         pass
