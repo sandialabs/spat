@@ -43,8 +43,8 @@ class ChipIdentify:
     # static variables
     max_num_dists = 64 # should be at least 64 in practice
     
-    def __init__(self, fileName = "chipsignatures.xml", nb=1024):
-        self.nb = nb
+    def __init__(self, fileName = "chipsignatures.xml", n_bits=1024):
+        self.n_bits = n_bits
         self.fileName = fileName
         self.setup()
 
@@ -181,7 +181,7 @@ class ChipIdentify:
 
         hd_dict = dict()
         for key, value in self.signatureMap.items():
-            relhd = float(bitstringutils.hd(bits, value))/self.nb
+            relhd = float(bitstringutils.hd(bits, value))/self.n_bits
             hd_dict[key] = relhd
 
         return hd_dict
@@ -205,7 +205,7 @@ class ChipIdentify:
         else:
             # update unstable bit map
             if chip_name not in self.unstableBits:
-                self.unstableBits[chip_name] = BitStream(uint=0, length=self.nb)
+                self.unstableBits[chip_name] = BitStream(uint=0, length=self.n_bits)
             if self.measCount[chip_name] > 0:
                 self.unstableBits[chip_name] = self.unstableBits[chip_name] | (self.signatureMap[chip_name] ^ sig) 
         
