@@ -24,20 +24,18 @@ Tests for module spat.sigfile
 '''
 
 from __future__ import print_function
-try:
+import os
+import sys
+if sys.version_info[0] > 2:
     from unittest.mock import patch, call, MagicMock, mock_open
     from unittest import TestCase, main, skipIf
-    PY3 = True
-except ImportError:
+    from io import StringIO
+    builtin_pkg = 'builtins'
+else:
     from mock import patch, call, MagicMock, mock_open
     from unittest2 import TestCase, main, skipIf
-    PY3 = False
-
-try:
     from StringIO import StringIO
-except ImportError:
-    from io import BytesIO as StringIO
-import os
+    builtin_pkg = '__builtin__'
 
 from bitstring import Bits
 from spat import sigfile
@@ -70,7 +68,7 @@ class SigFileUnitTests(TestCase):
         m_isdir.return_value = True
         with patch('spat.sigfile.SigFile.open') as m_sigfile_open:
             sf = sigfile.SigFile('/path/to/foo')
-        with patch(('builtins' if PY3 else '__builtin__') + '.open',
+        with patch(builtin_pkg + '.open',
                new_callable=mock_open()) as m_open:
             sf.open()
         m_open.assert_called_with('/path/to/foo', 'rb')
@@ -82,7 +80,7 @@ class SigFileUnitTests(TestCase):
         m_isdir.return_value = False
         with patch('spat.sigfile.SigFile.open') as m_sigfile_open:
             sf = sigfile.SigFile('/path/to/foo')
-        with patch(('builtins' if PY3 else '__builtin__') + '.open',
+        with patch(builtin_pkg + '.open',
                new_callable=mock_open()) as m_open:
             sf.open()
         m_open.assert_called_with('/path/to/foo', 'rb')
@@ -97,7 +95,7 @@ class SigFileUnitTests(TestCase):
     @patch('os.path.isdir')
     def test_next(self, m_isdir):
         m_isdir.return_value = True
-        with patch(('builtins' if PY3 else '__builtin__') + '.open',
+        with patch(builtin_pkg + '.open',
                mock_open(read_data='chair')) as m_open:
             sf = sigfile.SigFile('/path/to/foo', 24)
         with patch.object(sf.f, 'read', MagicMock(side_effect=[b'foo', b'bar', b'no', b'baz'])):
