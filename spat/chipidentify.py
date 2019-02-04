@@ -86,12 +86,7 @@ class ChipIdentify:
             
     def load(self):
         """Load data from file"""
-        try:
-            mytree = etree.parse(self.fileName)
-        except ParseError as pe:
-            print pe
-            return
-
+        mytree = etree.parse(self.fileName)
         myroot = mytree.getroot()
 
         if myroot.tag != 'chip_list':
