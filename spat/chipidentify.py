@@ -56,8 +56,12 @@ class ChipIdentify:
         self.setup()
 
         if (os.path.isfile(self.fileName)):
-            self.load()
-            print "Using signature database at '%s' with %d chip signatures" % (self.fileName, len(self))
+            try:
+                self.load()
+            except ParseError as pe:
+                _log.error(pe)
+            else:
+                _log.info("Using signature database at '%s' with %d chip signatures" % (self.fileName, len(self)))
         else:
             print "WARNING: No chip signatures found at '%s'" % self.fileName
             if not os.path.isdir(os.path.split(self.fileName)[0]):
