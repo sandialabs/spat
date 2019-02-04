@@ -32,17 +32,24 @@ __version__ = "1.2"
 __author__ = "Ryan Helinski and Mitch Martin"
 
 import os, subprocess, glob, time
-from bitstring import Bits, BitStream
-import bitstringutils
 import xml.etree.ElementTree as etree
 from xml.etree.ElementTree import ParseError
+
+import logging
+_log = logging.getLogger('spat')
+
+from bitstring import Bits, BitStream
+from scipy.stats import gamma
+# scipy-ref.pdf Section 5.13 on page 390
+
+import spat.bitstringutils
 
 class ChipIdentify:
     """This class is used to identify a chip's name based on a database of PUF signatures"""
 
     # static variables
     max_num_dists = 64 # should be at least 64 in practice
-    
+
     def __init__(self, fileName = "chipsignatures.xml", n_bits=1024):
         self.n_bits = n_bits
         self.fileName = fileName
@@ -274,9 +281,6 @@ class ChipIdentify:
     def prob_alias(self, plot=False):
         """Returns tuple (threshold, probability)"""
 
-        from scipy.stats import gamma
-        # scipy-ref.pdf Section 5.13 on page 390
-        
         if plot:
             import matplotlib.pyplot as plt
             plt.ion()
