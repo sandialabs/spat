@@ -29,7 +29,7 @@ import sys
 if sys.version_info[0] > 2:
     from unittest.mock import patch, call, MagicMock, mock_open
     from unittest import TestCase, main, skipIf
-    from io import StringIO
+    from io import BytesIO as StringIO
     builtin_pkg = 'builtins'
 else:
     from mock import patch, call, MagicMock, mock_open
