@@ -63,7 +63,7 @@ class ChipIdentify:
             else:
                 _log.info("Using signature database at '%s' with %d chip signatures" % (self.fileName, len(self)))
         else:
-            print "WARNING: No chip signatures found at '%s'" % self.fileName
+            _log.warning("No chip signatures found at '%s'" % self.fileName)
             if not os.path.isdir(os.path.split(self.fileName)[0]):
                 os.makedirs(os.path.split(self.fileName)[0])
 
@@ -174,7 +174,7 @@ class ChipIdentify:
 
         chipEl.tail = "\n"
                         
-        print 'Saving chip signature database to \'%s\'' % self.fileName
+        _log.info('Saving chip signature database to \'%s\'' % self.fileName)
         xmlfile = open(self.fileName, 'w')
         #xml_extras.indent(chipListEl) # add white space to XML DOM to result in pretty printed string
         xmlfile.write('<?xml version="1.0" encoding="UTF-8" ?>\n' + etree.tostring(chipListEl))
@@ -311,6 +311,6 @@ class ChipIdentify:
         if plot:
             plt.axvline(threshold)
         prob = icdrv.cdf(threshold)
-        print 'Noise 99.7%% threshold: %f, probability of aliasing: %1.3e' % (threshold, prob)
+        _log.info('Noise 99.7%% threshold: %f, probability of aliasing: %1.3e' % (threshold, prob))
         return threshold, prob
 
