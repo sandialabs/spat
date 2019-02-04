@@ -42,14 +42,22 @@ class ChipIdentifyTests(TestCase):
     'ChipIdentify unit tests'
 
     def setUp(self):
-        with patch('spat.chipidentify.ChipIdentify.load') as m_load, \
-                patch('os.path.isfile') as m_isfile, \
-                patch('os.path.isdir') as m_isdir, \
-                patch('os.makedirs') as m_makedirs, \
-                patch('spat.chipidentify.ChipIdentify.load') as m_load:
+        with patch('spat.chipidentify.ChipIdentify.load') as self.m_load, \
+                patch('os.path.isfile') as self.m_isfile, \
+                patch('spat.chipidentify.ChipIdentify.__len__') as self.m_len, \
+                patch('os.path.isdir') as self.m_isdir, \
+                patch('os.makedirs') as self.m_makedirs, \
+                patch('spat.chipidentify.ChipIdentify.setup') as self.m_setup:
+            self.m_isfile.return_value = True
+            self.m_len.return_value = 3
             self.ci = ChipIdentify('foo', 10)
 
 
     def test_init(self):
         self.assertEqual(self.ci.n_bits, 10)
         self.assertEqual(self.ci.fileName, 'foo')
+
+        self.m_load.assert_called()
+        self.m_isfile.assert_called_with('foo')
+        self.m_len.assert_called()
+        self.m_setup.assert_called()
