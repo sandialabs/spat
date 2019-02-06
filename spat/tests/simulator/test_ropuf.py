@@ -25,6 +25,7 @@ Tests for module spat.simulator.abstractsimulator
 
 from __future__ import print_function
 import sys
+from pkg_resources import resource_string
 if sys.version_info[0] > 2:
     from unittest.mock import patch, call, MagicMock, mock_open
     from unittest import TestCase, main, skipIf
@@ -102,23 +103,7 @@ class ROPUFSimulatorUnitTests(AbstractSimulatorUnitTests):
 
     def test_genSetupXML(self):
         xml = self.sim.genSetupXML()
-        expected = b'''<xml encoding="UTF-8" version="1.0">
-<setup noise_mu="0.0" noise_sd="0.1" param_mu="13.0" param_sd="5.0" />
-<virtchip name="t001">
-<realvalues>
-<value>1.0</value>
-<value>2.0</value>
-<value>3.0</value>
-</realvalues>
-</virtchip>
-<virtchip name="t002">
-<realvalues>
-<value>7.0</value>
-<value>11.0</value>
-<value>17.0</value>
-</realvalues>
-</virtchip>
-</xml>'''
+        expected = resource_string('spat.tests', 'data/simulator_setup.xml')
         self.assertEqual(xml, expected)
 
 

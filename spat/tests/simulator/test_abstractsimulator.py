@@ -100,7 +100,7 @@ class AbstractSimulatorUnitTests(TestCase):
         m_generateSetup.assert_called_with()
 
     def setUp(self):
-        ex_file_path = pkg_resources.resource_filename('spat.tests', 'data/example_setup.xml')
+        ex_file_path = pkg_resources.resource_filename('spat.tests', 'data/simulator_setup.xml')
         obj = etree.parse(ex_file_path)
 
         with patch(self.target_class_path+'.__init__',
