@@ -61,6 +61,7 @@ class Simulator(AbstractSimulator):
     def genSetupXML(self):
         myxml = etree.Element('xml', attrib={'version':'1.0', 'encoding':'UTF-8'})
         myxml.text = "\n"
+        myxml.tail = "\n"
         setupEl = etree.SubElement(
                 myxml,
                 'setup',
@@ -69,15 +70,16 @@ class Simulator(AbstractSimulator):
         setupEl.tail = "\n"
         for index in range(self.numVirtChips):
             virtChipEl = etree.SubElement(myxml, 'virtchip', attrib={'name':self.chipNames[index]})
-            virtChipEl.text = "\n"
+            virtChipEl.text = "\n    "
             virtChipEl.tail = "\n"
             valsEl = etree.SubElement(virtChipEl, 'realvalues')
-            valsEl.text = "\n"
+            valsEl.text = "\n        "
             valsEl.tail = "\n"
             for param in self.realValues[index]:
                 child = etree.SubElement(valsEl, 'value')
                 child.text = str(param)
-                child.tail = "\n"
+                child.tail = "\n        "
+            child.tail = "\n    "
 
         return etree.tostring(myxml)
 
