@@ -64,8 +64,8 @@ class ChipIdentify:
                 _log.info("Using signature database at '%s' with %d chip signatures" % (self.fileName, len(self)))
         else:
             _log.warning("No chip signatures found at '%s'" % self.fileName)
-            if not os.path.isdir(os.path.split(self.fileName)[0]):
-                os.makedirs(os.path.split(self.fileName)[0])
+            if not os.path.isdir(os.path.dirname(self.fileName)):
+                os.makedirs(os.path.dirname(self.fileName))
 
     def setup(self):
         # To map chip names to signatures:
