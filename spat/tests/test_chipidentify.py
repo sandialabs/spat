@@ -35,6 +35,7 @@ else:
     from mock import patch, call, MagicMock, mock_open
     from unittest2 import TestCase, main, skipIf
     from StringIO import StringIO
+from xml.etree.ElementTree import ParseError
 
 from bitstring import Bits
 from spat.chipidentify import ChipIdentify
@@ -49,12 +50,12 @@ class ChipIdentifyTests(TestCase):
         with patch('spat.chipidentify.ChipIdentify.load') as m_load, \
                 patch('os.path.isfile') as m_isfile, \
                 patch('spat.chipidentify.ChipIdentify.__len__') as m_len, \
-                patch('os.path.isdir') as m_isdir, \
-                patch('os.makedirs') as m_makedirs, \
                 patch('spat.chipidentify.ChipIdentify.setup') as m_setup:
             m_isfile.return_value = True
             m_len.return_value = 3
+
             ci = ChipIdentify('foo', 10)
+
 
         self.assertEqual(ci.n_bits, 10)
         self.assertEqual(ci.fileName, 'foo')
@@ -63,6 +64,39 @@ class ChipIdentifyTests(TestCase):
         m_isfile.assert_called_with('foo')
         m_len.assert_called()
         m_setup.assert_called()
+
+
+    def test_init_parse_error(self):
+        with patch('spat.chipidentify.ChipIdentify.load') as m_load, \
+                patch('os.path.isfile') as m_isfile, \
+                patch('spat.chipidentify.ChipIdentify.__len__') as m_len, \
+                patch('spat.chipidentify.ChipIdentify.setup') as m_setup:
+            m_isfile.return_value = True
+            m_len.return_value = 3
+            m_load.side_effect = ParseError
+
+            ci = ChipIdentify('bar', 100)
+
+        m_isfile.assert_called_with('bar')
+        m_load.assert_called()
+
+
+    def test_init_no_file(self):
+        with patch('os.path.isfile') as m_isfile, \
+                patch('spat.chipidentify.ChipIdentify.__len__') as m_len, \
+                patch('os.path.isdir') as m_isdir, \
+                patch('os.makedirs') as m_makedirs, \
+                patch('spat.chipidentify.ChipIdentify.setup') as m_setup:
+            m_isfile.return_value = False
+            m_len.return_value = 3
+            m_isdir.return_value = False
+
+            ci = ChipIdentify('baz/lur', 10)
+
+        m_isfile.assert_called_with('baz/lur')
+        m_isdir.assert_called_with('baz')
+        m_makedirs.assert_called_with('baz')
+
 
     def test_setup(self):
         self.ci.setup()
