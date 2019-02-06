@@ -26,6 +26,7 @@ Tests for module spat.sigfile
 from __future__ import print_function
 import os
 import sys
+from pkg_resources import resource_filename
 if sys.version_info[0] > 2:
     from unittest.mock import patch, call, MagicMock, mock_open
     from unittest import TestCase, main, skipIf
@@ -42,22 +43,47 @@ class ChipIdentifyTests(TestCase):
     'ChipIdentify unit tests'
 
     def setUp(self):
-        with patch('spat.chipidentify.ChipIdentify.load') as self.m_load, \
-                patch('os.path.isfile') as self.m_isfile, \
-                patch('spat.chipidentify.ChipIdentify.__len__') as self.m_len, \
-                patch('os.path.isdir') as self.m_isdir, \
-                patch('os.makedirs') as self.m_makedirs, \
-                patch('spat.chipidentify.ChipIdentify.setup') as self.m_setup:
-            self.m_isfile.return_value = True
-            self.m_len.return_value = 3
-            self.ci = ChipIdentify('foo', 10)
-
+        self.ci = ChipIdentify(fileName=resource_filename('spat.tests', 'data/example_setup.xml'))
 
     def test_init(self):
-        self.assertEqual(self.ci.n_bits, 10)
-        self.assertEqual(self.ci.fileName, 'foo')
+        with patch('spat.chipidentify.ChipIdentify.load') as m_load, \
+                patch('os.path.isfile') as m_isfile, \
+                patch('spat.chipidentify.ChipIdentify.__len__') as m_len, \
+                patch('os.path.isdir') as m_isdir, \
+                patch('os.makedirs') as m_makedirs, \
+                patch('spat.chipidentify.ChipIdentify.setup') as m_setup:
+            m_isfile.return_value = True
+            m_len.return_value = 3
+            ci = ChipIdentify('foo', 10)
 
-        self.m_load.assert_called()
-        self.m_isfile.assert_called_with('foo')
-        self.m_len.assert_called()
-        self.m_setup.assert_called()
+        self.assertEqual(ci.n_bits, 10)
+        self.assertEqual(ci.fileName, 'foo')
+
+        m_load.assert_called()
+        m_isfile.assert_called_with('foo')
+        m_len.assert_called()
+        m_setup.assert_called()
+
+    def test_setup(self):
+        self.ci.setup()
+
+        self.assertIsInstance(self.ci.signatureMap, dict)
+        self.assertIsInstance(self.ci.noiseDistMap, dict)
+        self.assertIsInstance(self.ci.interChipDistMap, dict)
+        self.assertIsInstance(self.ci.unstableBits, dict)
+        self.assertIsInstance(self.ci.measCount, dict)
+
+    def test_clear(self):
+        with patch.object(self.ci, 'setup') as m_setup, \
+                patch.object(self.ci, 'save') as m_save:
+            self.ci.clear()
+
+        m_setup.assert_called()
+        m_save.assert_called()
+
+    def test_len(self):
+        with patch.object(self.ci, 'signatureMap') as m_signatureMap:
+            retval = len(self.ci)
+
+        m_signatureMap.__len__.assert_called()
+        self.assertEqual(retval, 0)
