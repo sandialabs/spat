@@ -87,6 +87,10 @@ double-click:
 
   > apt install python python-pip python-tk
 
+### Red Hat
+
+  > yum install tkinter
+
 
 Tutorial
 ========
