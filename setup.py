@@ -34,6 +34,9 @@ def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 requires = [
+    'numpy',
+    'scipy',
+    'matplotlib<3.0',
     'bitstring>=3.1,<3.2'
     ]
 
