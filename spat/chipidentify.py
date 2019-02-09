@@ -42,7 +42,7 @@ from bitstring import Bits, BitStream
 from scipy.stats import gamma
 # scipy-ref.pdf Section 5.13 on page 390
 
-import spat.bitstringutils
+from spat.bitstringutils import hd
 
 class ChipIdentify:
     """This class is used to identify a chip's name based on a database of PUF signatures"""
@@ -187,7 +187,7 @@ class ChipIdentify:
 
         hd_dict = dict()
         for key, value in self.signatureMap.items():
-            relhd = float(bitstringutils.hd(bits, value))/self.n_bits
+            relhd = float(hd(bits, value))/self.n_bits
             hd_dict[key] = relhd
 
         return hd_dict
@@ -224,7 +224,7 @@ class ChipIdentify:
         else: 
             # assume that if we didn't have a list, that this is the first measurement, 
             # and therefore we need to wait for a subsequent one before we can compute a noise distance
-            self.noiseDistMap[chip_name].append(bitstringutils.hd(sig, self.signatureMap[chip_name]))
+            self.noiseDistMap[chip_name].append(hd(sig, self.signatureMap[chip_name]))
             # for scalability, should truncate this list 
             if len(self.noiseDistMap[chip_name]) > self.max_num_dists:
                 self.noiseDistMap[chip_name] = self.noiseDistMap[chip_name][-self.max_num_dists:]
@@ -239,7 +239,7 @@ class ChipIdentify:
             if other_chip_name not in self.interChipDistMap[chip_name].keys():
                 self.interChipDistMap[chip_name][other_chip_name] = []
             self.interChipDistMap[chip_name][other_chip_name].append(
-                bitstringutils.hd(sig, self.signatureMap[other_chip_name]))
+                hd(sig, self.signatureMap[other_chip_name]))
             # for scalability, I truncate this list 
             if len(self.interChipDistMap[chip_name][other_chip_name]) > self.max_num_dists:
                 self.interChipDistMap[chip_name][other_chip_name] = self.interChipDistMap[chip_name][other_chip_name][-self.max_num_dists:]
