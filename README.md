@@ -20,7 +20,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-<a href="https://api.travis-ci.com/sandialabs/spat">
+<a href="https://travis-ci.com/sandialabs/spat">
     <img src="https://api.travis-ci.com/sandialabs/spat.svg?branch=py2to3" 
          alt="Travis CI Build Status">
 </a>
