@@ -37,8 +37,12 @@ else:
     from StringIO import StringIO
 from xml.etree.ElementTree import ParseError
 
+import numpy as np
 from bitstring import Bits
 from spat.chipidentify import ChipIdentify
+
+def vname(x):
+    return 'v%03d'%(x+1)
 
 class ChipIdentifyTests(TestCase):
     'ChipIdentify unit tests'
@@ -121,3 +125,44 @@ class ChipIdentifyTests(TestCase):
 
         m_signatureMap.__len__.assert_called()
         self.assertEqual(retval, 0)
+
+    def test_load(self):
+
+        self.ci.fileName = resource_filename('spat.tests', 'data/signatures.xml')
+        self.ci.load()
+
+        self.assertEqual(self.ci.n_bits, 1024)
+        self.assertEqual(len(self.ci.noiseDistMap), 32)
+        self.assertEqual(len(self.ci.signatureMap), 32)
+        self.assertEqual(len(self.ci.unstableBits), 32)
+
+        for i in range(32):
+            iname = vname(i)
+            self.assertIn(iname, self.ci.measCount)
+            self.assertGreater(self.ci.measCount[iname], 32)
+
+            self.assertEqual(len(self.ci.interChipDistMap[iname]), 31)
+            for j in range(32):
+                if i == j:
+                    continue
+
+                jname = vname(j)
+                self.assertGreater(len(self.ci.interChipDistMap[iname][jname]), 31)
+                ic_avg = np.mean(self.ci.interChipDistMap[iname][jname])
+                self.assertGreater(ic_avg, 200)
+                self.assertLess(ic_avg, 800)
+
+            self.assertGreater(len(self.ci.noiseDistMap[iname]), 30)
+            nd_avg = np.mean(self.ci.noiseDistMap[iname])
+            self.assertGreater(nd_avg, 1)
+            self.assertLess(nd_avg, 20)
+
+            self.assertEqual(len(self.ci.signatureMap[iname]), 1024)
+            sig_hw = self.ci.signatureMap[iname].count(1)
+            self.assertGreater(sig_hw, 384)
+            self.assertLess(sig_hw, 640)
+
+            self.assertEqual(len(self.ci.unstableBits[iname]), 1024)
+            sig_hw = self.ci.unstableBits[iname].count(1)
+            self.assertGreater(sig_hw, 0)
+            self.assertLess(sig_hw, 96)
