@@ -83,7 +83,63 @@ class ChipIdentify:
 
     def __len__(self):
         return len(self.signatureMap)
-            
+
+    def load_chip_list(self, elem):
+        for subel in elem:
+            if subel.tag != 'chip':
+                raise NameError('<chip_list> element must contain only <chip> elements')
+            self.measCount[subel.get('name')] = int(subel.get('meas_count')) \
+                    if 'meas_count' in subel.attrib else 1
+            self.load_chip(subel)
+
+    def load_sig(self, parent, elem):
+        if elem.attrib['encoding'] != 'hex':
+            raise NameError('Only hex encoding supported, add "encoding=hex" and use a hex string')
+        self.signatureMap[parent.get('name')] = Bits("0x"+elem.text)
+
+    def load_noise(self, parent, elem):
+        if parent.get('name') not in self.noiseDistMap:
+            self.noiseDistMap[parent.get('name')] = []
+        for noise_dist in elem:
+            if noise_dist.tag != 'dist':
+                raise NameError('Tags under <noise> must be <dist>')
+            self.noiseDistMap[parent.get('name')].append(int(noise_dist.text))
+
+    def load_inter_chip(self, parent, elem):
+        if parent.get('name') not in self.interChipDistMap:
+            self.interChipDistMap[parent.get('name')] = dict()
+        for other_name in elem:
+            if other_name.tag != 'other':
+                raise NameError('Tags under <inter_chip> must be <other>')
+            if other_name.get('name') not in self.interChipDistMap[parent.get('name')]:
+                self.interChipDistMap[parent.get('name')][other_name.get('name')] = []
+            for other_dist in other_name:
+                if other_dist.tag != 'dist':
+                    raise NameError('Tags under <other> must be <dist>')
+                self.interChipDistMap[parent.get('name')][other_name.get('name')].append(int(other_dist.text))
+
+    def load_unstable_bits(self, parent, elem):
+        if elem.attrib['encoding'] != 'hex':
+            raise NameError('Only hex encoding supported, add "encoding=hex" and use a hex string')
+        self.unstableBits[parent.get('name')] = Bits("0x"+elem.text)
+
+    def load_chip(self, elem):
+        for subel in elem:
+            if subel.tag == 'sig':
+                self.load_sig(elem, subel)
+
+            elif subel.tag == 'noise':
+                self.load_noise(elem, subel)
+
+            elif subel.tag == 'inter_chip':
+                self.load_inter_chip(elem, subel)
+
+            elif subel.tag == 'unstable_bits':
+                self.load_unstable_bits(elem, subel)
+
+            else:
+                raise NameError('Unsupported tag %s' % subel.tag)
+
     def load(self):
         """Load data from file"""
         mytree = etree.parse(self.fileName)
@@ -92,44 +148,7 @@ class ChipIdentify:
         if myroot.tag != 'chip_list':
             raise NameError('Expecting this XML file to contain one <chip_list> element as its root')
 
-        for subelement in myroot:
-            if subelement.tag != 'chip':
-                raise NameError('<chip_list> element must contain only <chip> elements')
-            self.measCount[subelement.get('name')] = int(subelement.get('meas_count')) if 'meas_count' in subelement.attrib else 1
-            for subsub in subelement:
-                if subsub.tag == 'sig':
-                    if subsub.attrib['encoding'] != 'hex':
-                        raise NameError('Only hex encoding supported, add "encoding=hex" and use a hex string')
-                    self.signatureMap[subelement.get('name')] = Bits("0x"+subsub.text)
-
-                elif subsub.tag == 'noise':
-                    if subelement.get('name') not in self.noiseDistMap:
-                        self.noiseDistMap[subelement.get('name')] = []
-                    for noise_dist in subsub:
-                        if noise_dist.tag != 'dist':
-                            raise NameError('Tags under <noise> must be <dist>')
-                        self.noiseDistMap[subelement.get('name')].append(int(noise_dist.text))
-
-                elif subsub.tag == 'inter_chip':
-                    if subelement.get('name') not in self.interChipDistMap:
-                        self.interChipDistMap[subelement.get('name')] = dict()
-                    for other_name in subsub:
-                        if other_name.tag != 'other':
-                            raise NameError('Tags under <inter_chip> must be <other>')
-                        if other_name.get('name') not in self.interChipDistMap[subelement.get('name')]:
-                            self.interChipDistMap[subelement.get('name')][other_name.get('name')] = []
-                        for other_dist in other_name:
-                            if other_dist.tag != 'dist':
-                                raise NameError('Tags under <other> must be <dist>')
-                            self.interChipDistMap[subelement.get('name')][other_name.get('name')].append(int(other_dist.text))
-
-                elif subsub.tag == 'unstable_bits':
-                    if subsub.attrib['encoding'] != 'hex':
-                        raise NameError('Only hex encoding supported, add "encoding=hex" and use a hex string')
-                    self.unstableBits[subelement.get('name')] = Bits("0x"+subsub.text)
-
-                else:
-                    raise NameError('Unsupported tag %s' % subsub.tag)
+        self.load_chip_list(myroot)
         
     def save(self, altFileName=None):
         if altFileName != None: 
