@@ -105,18 +105,21 @@ class ChipIdentify:
                 raise NameError('Tags under <noise> must be <dist>')
             self.noiseDistMap[parent.get('name')].append(int(noise_dist.text))
 
+    def load_inter_chip_other(self, parent, other_name):
+        if other_name.get('name') not in self.interChipDistMap[parent.get('name')]:
+            self.interChipDistMap[parent.get('name')][other_name.get('name')] = []
+        for other_dist in other_name:
+            if other_dist.tag != 'dist':
+                raise NameError('Tags under <other> must be <dist>')
+            self.interChipDistMap[parent.get('name')][other_name.get('name')].append(int(other_dist.text))
+
     def load_inter_chip(self, parent, elem):
         if parent.get('name') not in self.interChipDistMap:
             self.interChipDistMap[parent.get('name')] = dict()
         for other_name in elem:
             if other_name.tag != 'other':
                 raise NameError('Tags under <inter_chip> must be <other>')
-            if other_name.get('name') not in self.interChipDistMap[parent.get('name')]:
-                self.interChipDistMap[parent.get('name')][other_name.get('name')] = []
-            for other_dist in other_name:
-                if other_dist.tag != 'dist':
-                    raise NameError('Tags under <other> must be <dist>')
-                self.interChipDistMap[parent.get('name')][other_name.get('name')].append(int(other_dist.text))
+            self.load_inter_chip_other(parent, other_name)
 
     def load_unstable_bits(self, parent, elem):
         if elem.attrib['encoding'] != 'hex':
@@ -221,7 +224,7 @@ class ChipIdentify:
     def get_sig(self, chip_name):
         return self.signatureMap[chip_name]
 
-    def process_sig (self, chip_name, sig):
+    def process_sig(self, chip_name, sig):
         """This computes and records some greedy statistics on a given signature"""
 
         # add this chip if it is unknown
