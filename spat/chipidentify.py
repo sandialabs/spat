@@ -152,45 +152,58 @@ class ChipIdentify:
             raise NameError('Expecting this XML file to contain one <chip_list> element as its root')
 
         self.load_chip_list(myroot)
-        
+
+    def save_chip(self, name, sig, chipListEl):
+        chipEl = etree.SubElement(chipListEl, 'chip', attrib={'name':name, 'meas_count':str(self.measCount[name])})
+        chipEl.text = "\n" + 2*"\t"
+        chipEl.tail = "\n" + "\t"
+        sigEl = etree.SubElement(chipEl, 'sig', attrib={'encoding':'hex'})
+        sigEl.text = sig.hex
+        sigEl.tail = "\n" + 2*"\t"
+        if name in self.noiseDistMap:
+            self.save_chip_noise_dist(name, chipEl)
+        if name in self.interChipDistMap:
+            self.save_chip_inter_chip_dist(name, chipEl)
+        if name in self.unstableBits:
+            self.save_chip_unstable_bits(name, chipEl)
+        return chipEl
+
+    def save_chip_noise_dist(self, name, chipEl):
+        noiseListEl = etree.SubElement(chipEl, 'noise')
+        noiseListEl.tail = "\n" + 2*"\t"
+        for dist in self.noiseDistMap[name]:
+            noiseEl = etree.SubElement(noiseListEl, 'dist')
+            noiseEl.text = str(dist)
+
+    def save_chip_inter_chip_dist(self, name, chipEl):
+        interListEl = etree.SubElement(chipEl, 'inter_chip')
+        interListEl.text = "\n" + 3*"\t"
+        interListEl.tail = "\n" + 2*"\t"
+        for other_name, dist_list in sorted(self.interChipDistMap[name].items(),
+                                            key=lambda item: item[0] ):
+            otherNameEl = etree.SubElement(interListEl, 'other')
+            otherNameEl.attrib['name'] = other_name
+            otherNameEl.tail = "\n" + 3*"\t"
+            for dist in dist_list:
+                interEl = etree.SubElement(otherNameEl, 'dist')
+                interEl.text = str(dist)
+        otherNameEl.tail = "\n" + 2*"\t"
+
+    def save_chip_unstable_bits(self, name, chipEl):
+        unstableBitsEl = etree.SubElement(chipEl, 'unstable_bits', attrib={'encoding':'hex'})
+        unstableBitsEl.text = self.unstableBits[name].hex
+        unstableBitsEl.tail = "\n" + "\t"
+
     def save(self, altFileName=None):
-        if altFileName != None: 
-            self.fileName = altFileName
         chipListEl = etree.Element('chip_list')
         chipListEl.text = "\n\t"
         for name, sig in sorted(self.signatureMap.items(), key=lambda item: item[0] ):
-            chipEl = etree.SubElement(chipListEl, 'chip', attrib={'name':name, 'meas_count':str(self.measCount[name])})
-            chipEl.text = "\n" + 2*"\t"
-            chipEl.tail = "\n" + "\t"
-            sigEl = etree.SubElement(chipEl, 'sig', attrib={'encoding':'hex'})
-            sigEl.text = sig.hex
-            sigEl.tail = "\n" + 2*"\t"
-            if name in self.noiseDistMap:
-                noiseListEl = etree.SubElement(chipEl, 'noise')
-                noiseListEl.tail = "\n" + 2*"\t"
-                for dist in self.noiseDistMap[name]:
-                    noiseEl = etree.SubElement(noiseListEl, 'dist')
-                    noiseEl.text = str(dist)
-            if name in self.interChipDistMap:
-                interListEl = etree.SubElement(chipEl, 'inter_chip')
-                interListEl.text = "\n" + 3*"\t"
-                interListEl.tail = "\n" + 2*"\t"
-                for other_name, dist_list in sorted(self.interChipDistMap[name].items(), key=lambda item: item[0] ):
-                    otherNameEl = etree.SubElement(interListEl, 'other')
-                    otherNameEl.attrib['name'] = other_name
-                    otherNameEl.tail = "\n" + 3*"\t"
-                    for dist in dist_list:
-                        interEl = etree.SubElement(otherNameEl, 'dist')
-                        interEl.text = str(dist)
-                otherNameEl.tail = "\n" + 2*"\t"
-
-            if name in self.unstableBits:
-                unstableBitsEl = etree.SubElement(chipEl, 'unstable_bits', attrib={'encoding':'hex'})
-                unstableBitsEl.text = self.unstableBits[name].hex
-                unstableBitsEl.tail = "\n" + "\t"
+            chipEl = self.save_chip(name, sig, chipListEl)
 
         chipEl.tail = "\n"
                         
+        if altFileName != None:
+            self.fileName = altFileName
         _log.info('Saving chip signature database to \'%s\'' % self.fileName)
         xmlfile = open(self.fileName, 'w')
         #xml_extras.indent(chipListEl) # add white space to XML DOM to result in pretty printed string
