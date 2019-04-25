@@ -166,3 +166,16 @@ class ChipIdentifyTests(TestCase):
             sig_hw = self.ci.unstableBits[iname].count(1)
             self.assertGreater(sig_hw, 0)
             self.assertLess(sig_hw, 96)
+
+    def test_save(self):
+        self.ci.fileName = resource_filename('spat.tests', 'data/signatures.xml')
+        self.ci.load()
+
+        m_open = mock_open()
+        with patch('__builtin__.open', m_open, create=True):
+            self.ci.save()
+
+        m_open.assert_called_with(os.path.abspath(self.ci.fileName), 'w')
+        with open(self.ci.fileName, 'r') as f_expect:
+            expect = f_expect.read()
+        self.assertEqual(expect, m_open().write.call_args_list[0][0][0])
