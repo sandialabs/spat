@@ -36,7 +36,6 @@ class bch_code(object):
 
     def close(self):
         if (not self.logFile.closed):
-            self.logFile.flush()
             self.logFile.close()
 
     def setup(self, first_measurement, MM=13, TT=20, KK=1024, PP=8):
@@ -65,7 +64,6 @@ class bch_code(object):
     def decode(self, response):
         p = subprocess.Popen("bch_decoder.exe -m %d -t %d -k %d -p %d" % (self.m, self.t, self.k, self.p), stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         p.stdin.write(response.hex + self.syndrome + "\n")
-        p.stdin.flush()
         p.stdin.close()
         output, errors = p.communicate()
         if len (output.strip()) != self.nb / 4:
@@ -94,4 +92,3 @@ if __name__=="__main__":
     print "Reduced errors: " + str(hd(firstMeasurement, myCoder.decode(newMeasurement)))
     
     print "Done!"
-    

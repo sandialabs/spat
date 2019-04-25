@@ -76,7 +76,6 @@ class QuartusCon(object):
         if (self.subProcess.returncode == None):
             try:
                 self.subProcess.stdin.write("q\n")
-                self.subProcess.stdin.flush()
                 self.subProcess.stdin.close()
                 if self.subProcess.wait() != 0:
                     print "Subprocess did not return 0"
