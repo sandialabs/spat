@@ -209,13 +209,13 @@ class ChipIdentify:
         xmlfile.write('<?xml version="1.0" encoding="UTF-8" ?>\n' + etree.tostring(chipListEl))
         xmlfile.close() # don't need to sync because we close here
 
-    def Identify(self, bits):
+    def identify(self, bits):
         "This compares a bit string against all known chip signatures and returns the closest match"
 
-        hd_dict = self.MatchMap(bits)
+        hd_dict = self.match_map(bits)
         return min(hd_dict.items(), key=lambda item: item[1]) 
     
-    def MatchMap(self, bits):
+    def match_map(self, bits):
         "This compares a bit string against all known chip signatures"
 
         hd_dict = dict()

@@ -457,7 +457,7 @@ class Application(Frame):
         print self.statusStr
 
     def updateWidgets(self):
-        scores = sorted(self.chipIdentifier.MatchMap(self.bits).items(), key=lambda item: item[1])[0:self.numMatchScores]
+        scores = sorted(self.chipIdentifier.match_map(self.bits).items(), key=lambda item: item[1])[0:self.numMatchScores]
         self.updateStatus()
 
         # Show matches on GUI
@@ -542,7 +542,7 @@ class Application(Frame):
         print >> reportFile, fmtUnstableBitMap(self.chipIdentifier.unstableBits[self.lastRead])
 
         print >> reportFile, fmtHeadingString("Scoreboard")
-        scores = sorted(self.chipIdentifier.MatchMap(self.bits).items(), key=lambda item: item[1])[0:self.numMatchScores]
+        scores = sorted(self.chipIdentifier.match_map(self.bits).items(), key=lambda item: item[1])[0:self.numMatchScores]
         for i in range(len(scores)):
             print >> reportFile, scores[i][0], "\t", '%0.2f %%' % (100-scores[i][1]*100)
 
@@ -673,7 +673,7 @@ class Application(Frame):
 
         # Determine chip's name
         if len(self.chipIdentifier)>0:
-            chip_name, match_dist = self.chipIdentifier.Identify(new_bits)
+            chip_name, match_dist = self.chipIdentifier.identify(new_bits)
             print "Best match for signature: %s with %6f Hamming distance" % (chip_name, match_dist)
         if len(self.chipIdentifier)==0 or match_dist > self.noiseThreshold:
             # Don't know this chip
