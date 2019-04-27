@@ -206,7 +206,7 @@ class ChipIdentify:
             self.fileName = altFileName
         _log.info('Saving chip signature database to \'%s\'' % self.fileName)
         xmlfile = open(self.fileName, 'w')
-        xmlfile.write('<?xml version="1.0" encoding="UTF-8" ?>\n' + etree.tostring(chipListEl))
+        xmlfile.write(b'<?xml version="1.0" encoding="UTF-8" ?>\n' + etree.tostring(chipListEl))
         xmlfile.close() # don't need to sync because we close here
 
     def identify(self, bits):
