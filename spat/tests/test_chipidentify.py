@@ -172,7 +172,8 @@ class ChipIdentifyTests(TestCase):
         self.ci.load()
 
         m_open = mock_open()
-        with patch('__builtin__.open', m_open, create=True):
+        with patch('builtins.open' if sys.version_info[0] > 2 \
+                else '__builtin__.open', m_open, create=True):
             self.ci.save()
 
         m_open.assert_called_with(os.path.abspath(self.ci.fileName), 'w')
