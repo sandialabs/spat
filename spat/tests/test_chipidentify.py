@@ -179,3 +179,11 @@ class ChipIdentifyTests(TestCase):
         with open(self.ci.fileName, 'r') as f_expect:
             expect = f_expect.read()
         self.assertEqual(expect, m_open().write.call_args_list[0][0][0])
+
+    def test_identify(self):
+        mm_d = {'t1': 0.5, 't2': 0.3, 't3': 0.1}
+        with patch.object(self.ci, 'match_map', return_value=mm_d) as m_match_map:
+            retval = self.ci.identify('foo')
+
+        m_match_map.assert_called_with('foo')
+        self.assertEqual(retval, ('t3', 0.1))
