@@ -28,14 +28,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import platform
 import os
+import sys
 from setuptools import setup
 
 def read(fname):
     return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 requires = [
-    'numpy',
-    'scipy',
+    'numpy' if sys.version_info[0] > 2 else 'numpy<1.17>=1.16',
+    'scipy' if sys.version_info[0] > 2 else 'scipy<1.3>=1.2',
     'matplotlib<3.0',
     'bitstring>=3.1,<3.2'
     ]
