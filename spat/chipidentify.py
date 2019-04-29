@@ -230,45 +230,30 @@ class ChipIdentify:
         # but since I'm using the minimum Hamming distance, there's no problem with 
         # just storing the first measured signature here
         self.signatureMap[chip_name] = sig
+        self.noiseDistMap[chip_name] = []
         self.measCount[chip_name] = 0
 
     def get_sig(self, chip_name):
         return self.signatureMap[chip_name]
 
-    def process_sig(self, chip_name, sig):
-        """This computes and records some greedy statistics on a given signature"""
+    def update_unstable_bitmap(self, chip_name, sig):
+        if chip_name not in self.unstableBits:
+            self.unstableBits[chip_name] = BitStream(uint=0, length=self.n_bits)
+        if self.measCount[chip_name] > 0:
+            self.unstableBits[chip_name] = self.unstableBits[chip_name] | (self.signatureMap[chip_name] ^ sig) 
 
-        # add this chip if it is unknown
-        if chip_name not in self.signatureMap.keys():
-            self.add(chip_name, sig)
-        else:
-            # update unstable bit map
-            if chip_name not in self.unstableBits:
-                self.unstableBits[chip_name] = BitStream(uint=0, length=self.n_bits)
-            if self.measCount[chip_name] > 0:
-                self.unstableBits[chip_name] = self.unstableBits[chip_name] | (self.signatureMap[chip_name] ^ sig) 
-        
-        # Increment the measurement count for this chip
-        self.measCount[chip_name] += 1
+    def update_noise_dist(self, chip_name, sig):
+        self.noiseDistMap[chip_name].append(hd(sig, self.signatureMap[chip_name]))
+        # for scalability, truncate this list 
+        if len(self.noiseDistMap[chip_name]) > self.max_num_dists:
+            self.noiseDistMap[chip_name] = self.noiseDistMap[chip_name][-self.max_num_dists:]
 
-        # record 1 noise distance
-        if chip_name not in self.noiseDistMap.keys():
-            self.noiseDistMap[chip_name] = []
-        else: 
-            # assume that if we didn't have a list, that this is the first measurement, 
-            # and therefore we need to wait for a subsequent one before we can compute a noise distance
-            self.noiseDistMap[chip_name].append(hd(sig, self.signatureMap[chip_name]))
-            # for scalability, should truncate this list 
-            if len(self.noiseDistMap[chip_name]) > self.max_num_dists:
-                self.noiseDistMap[chip_name] = self.noiseDistMap[chip_name][-self.max_num_dists:]
-
-        # and record (N_C - 1) inter-chip distances
+    def update_interchip_dists(self, chip_name, sig):
+        if chip_name not in self.interChipDistMap.keys():
+            self.interChipDistMap[chip_name] = dict()
         for other_chip_name in self.signatureMap.keys():
             if other_chip_name == chip_name:
-                # don't compare to self 
-                continue
-            if chip_name not in self.interChipDistMap.keys():
-                self.interChipDistMap[chip_name] = dict()
+                continue # don't compare to self 
             if other_chip_name not in self.interChipDistMap[chip_name].keys():
                 self.interChipDistMap[chip_name][other_chip_name] = []
             self.interChipDistMap[chip_name][other_chip_name].append(
@@ -276,6 +261,25 @@ class ChipIdentify:
             # for scalability, I truncate this list 
             if len(self.interChipDistMap[chip_name][other_chip_name]) > self.max_num_dists:
                 self.interChipDistMap[chip_name][other_chip_name] = self.interChipDistMap[chip_name][other_chip_name][-self.max_num_dists:]
+
+    def process_sig(self, chip_name, sig):
+        """This computes and records some greedy statistics on a given signature"""
+
+        # if this chip is unknown
+        if chip_name not in self.signatureMap.keys():
+            self.add(chip_name, sig)
+        else:
+            self.update_unstable_bitmap(chip_name, sig)
+        
+        # Increment the measurement count for this chip
+        self.measCount[chip_name] += 1
+
+        # Need at least 2 measurements to compute a noise distance
+        if self.measCount[chip_name] > 1:
+            self.update_noise_dist(chip_name, sig)
+
+        # and record (N_C - 1) inter-chip distances
+        self.update_interchip_dists(chip_name, sig)
 
     def get_meas_count(self, chip_name):
         if chip_name in self.measCount:

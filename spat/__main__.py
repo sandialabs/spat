@@ -679,7 +679,7 @@ class Application(Frame):
             # Don't know this chip
             chip_name = tkSimpleDialog.askstring('Enter Chip Name', 'The noise threshold (%02d %%) has been exceeded or this is a new chip.\nPlease enter its name:' % (100*self.noiseThreshold), initialvalue=chip_name if len(self.chipIdentifier)>0 else '')
             self.chipIdentifier.add(chip_name, new_bits)
-            self.chipIdentifier.save() # don't really need to do this until we close
+            self.chipIdentifier.save() # TODO do not need to do this until we close
         self.chipIdentifier.process_sig(chip_name, new_bits) # compute some greedy statistics
 
         # Don't write the bits in case of file read-back
