@@ -188,3 +188,28 @@ class ChipIdentifyTests(TestCase):
 
         m_match_map.assert_called_with('foo')
         self.assertEqual(retval, ('t3', 0.1))
+
+    def test_match_map(self):
+        self.ci.signatureMap = {
+                'd1': Bits('0xdeadbeef'),
+                'd2': Bits('0xfa1afe13'),
+                'd3': Bits('0x00010203')
+                }
+        retval = self.ci.match_map(Bits('0xdeedbeaf'))
+
+        self.assertEqual(
+                retval,
+                {
+                    'd1': 0.001953125,
+                    'd2': 0.0146484375,
+                    'd3': 0.01953125
+                })
+
+    def test_add(self):
+        self.assertNotIn('test', self.ci.signatureMap)
+        self.assertNotIn('test', self.ci.measCount)
+        self.ci.add('test', Bits('0xf00d200b'))
+        self.assertIn('test', self.ci.signatureMap)
+        self.assertEqual(self.ci.signatureMap['test'], Bits('0xf00d200b'))
+        self.assertIn('test', self.ci.measCount)
+        self.assertEqual(self.ci.measCount['test'], 0)
