@@ -213,3 +213,21 @@ class ChipIdentifyTests(TestCase):
         self.assertEqual(self.ci.signatureMap['test'], Bits('0xf00d200b'))
         self.assertIn('test', self.ci.measCount)
         self.assertEqual(self.ci.measCount['test'], 0)
+
+    def test_get_sig(self):
+        self.ci.signatureMap['foo'] = 'bar'
+        self.assertEqual(self.ci.get_sig('foo'), 'bar')
+
+    def test_process_sig(self):
+        self.ci.signatureMap['foo'] = 'baz'
+        self.ci.measCount['foo'] = 42
+        with patch.object(self.ci, 'add') as m_add, \
+                patch.object(self.ci, 'update_noise_dist') as m_noise, \
+                patch.object(self.ci, 'update_unstable_bitmap') as m_unstable, \
+                patch.object(self.ci, 'update_interchip_dists') as m_interchip:
+            self.ci.process_sig('foo', 'bar')
+
+        self.assertEqual(self.ci.measCount['foo'], 43)
+        m_unstable.assert_called_with('foo', 'bar')
+        m_noise.assert_called_with('foo', 'bar')
+        m_interchip.assert_called_with('foo', 'bar')
