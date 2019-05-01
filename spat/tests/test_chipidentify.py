@@ -231,3 +231,10 @@ class ChipIdentifyTests(TestCase):
         m_unstable.assert_called_with('foo', 'bar')
         m_noise.assert_called_with('foo', 'bar')
         m_interchip.assert_called_with('foo', 'bar')
+
+    def test_get_meas_count(self):
+        self.ci.fileName = resource_filename('spat.tests', 'data/signatures.xml')
+        self.ci.load()
+
+        self.assertEqual(self.ci.get_meas_count('v001'), 34)
+        self.assertEqual(self.ci.get_meas_count('bogus'), 0)
