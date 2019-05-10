@@ -38,6 +38,7 @@ else:
 from xml.etree.ElementTree import ParseError
 
 import numpy as np
+from numpy.testing import assert_almost_equal
 from bitstring import Bits
 from spat.chipidentify import ChipIdentify
 
@@ -238,3 +239,120 @@ class ChipIdentifyTests(TestCase):
 
         self.assertEqual(self.ci.get_meas_count('v001'), 34)
         self.assertEqual(self.ci.get_meas_count('bogus'), 0)
+
+    def test_num_unstable_bits(self):
+        self.ci.unstableBits['foo'] = Bits('0b00010101')
+
+        self.assertEqual(self.ci.get_num_unstable_bits('foo'), 3)
+
+    def test_unstable_bits_valid(self):
+        self.assertEqual(self.ci.unstable_bits_valid('foo'), False)
+
+    def test_unstable_bits_valid_1(self):
+        self.ci.measCount['foo'] = 1
+        self.assertEqual(self.ci.unstable_bits_valid('foo'), False)
+
+    def test_unstable_bits_valid_2(self):
+        self.ci.measCount['foo'] = 2
+        self.assertEqual(self.ci.unstable_bits_valid('foo'), True)
+
+    def test_get_noise_dist_avg(self):
+        self.ci.noiseDistMap['foo'] = range(5)
+
+        self.assertEqual(self.ci.get_noise_dist_avg('foo'), 2)
+
+    def test_get_inter_dist_avg_empty(self):
+        self.ci.interChipDistMap = {
+                'v%03d' % x: {
+                    'v%03d' % y: [x*x + y] for y in range(1) if x!=y
+                    } for x in range(10)
+                }
+
+        self.assertAlmostEqual(
+                self.ci.get_inter_dist_avg('v001'),
+                1)
+
+    def test_get_inter_dist_avg(self):
+        self.ci.interChipDistMap = {
+                'v%03d' % x: {
+                    'v%03d' % y: [x*x + y] for y in range(10) if x!=y
+                    } for x in range(10)
+                }
+
+        self.assertAlmostEqual(
+                self.ci.get_inter_dist_avg('v003'),
+                13.666666666666666)
+
+# Parameters used to generate data file:
+# <setup noise_mu="0.0" noise_sd="0.1" param_mu="13.0" param_sd="5.0" />
+    def test_get_all_noise_dists(self):
+        self.ci.fileName = resource_filename('spat.tests', 'data/signatures.xml')
+        self.ci.load()
+
+        val = self.ci.get_all_noise_dists()
+
+        self.assertEqual(len(val), 993)
+        self.assertLess(6.5, np.mean(val))
+        self.assertLess(np.mean(val), 26)
+        self.assertLess(1, np.std(val))
+        self.assertLess(np.std(val), 10)
+
+    def test_get_all_inter_chip_dists(self):
+        self.ci.fileName = resource_filename('spat.tests', 'data/signatures.xml')
+        self.ci.load()
+
+        val = self.ci.get_all_inter_chip_dists()
+
+        self.assertEqual(len(val), 31775)
+        self.assertLess(448, np.mean(val))
+        self.assertLess(np.mean(val), 576)
+        self.assertLess(1, np.std(val))
+        self.assertLess(np.std(val), 32)
+
+    def test_prob_alias(self):
+        self.ci.fileName = resource_filename('spat.tests', 'data/signatures.xml')
+        self.ci.load()
+
+        threshold, prob = self.ci.prob_alias(False)
+        self.assertLess(10, threshold)
+        self.assertLess(threshold, 30)
+        self.assertLess(prob, 1e-20)
+
+    def test_prob_alias_plot(self):
+        self.ci.interChipDistMap = {
+                'v%03d' % x: {
+                    'v%03d' % y: [x**2 + y] for y in range(3) if x!=y
+                    } for x in range(3)
+                }
+        self.ci.noiseDistMap = {
+                'v%03d' % x: range(x*2, (x+1)*2) for x in range(2)
+                }
+
+
+        with patch('matplotlib.pyplot.ion') as m_ion, \
+                patch('matplotlib.pyplot.clf') as m_clf, \
+                patch('matplotlib.pyplot.hist') as m_hist, \
+                patch('matplotlib.pyplot.plot') as m_plot, \
+                patch('matplotlib.pyplot.axvline') as m_axvline:
+            threshold, prob = self.ci.prob_alias(True)
+
+        m_ion.assert_called_with()
+        m_clf.assert_called_with()
+        m_hist.assert_has_calls([
+                call([0, 1, 2, 3], normed=True),
+                call([1, 2, 1, 3, 4, 5], normed=True)])
+        self.assertEqual(
+                m_plot.call_args_list[0][0][0],
+                range(0, 3))
+        self.assertEqual(
+                m_plot.call_args_list[1][0][0],
+                range(0, 5))
+        assert_almost_equal(
+                m_plot.call_args_list[0][0][1],
+                np.array([0.145192 , 0.3229238, 0.3227597]))
+        assert_almost_equal(
+                m_plot.call_args_list[1][0][1],
+                np.array([0.0, 4.19025371e+06, 2.17501421e-01,
+                           7.01039980e-02, 2.63226824e-02]), 2)
+        m_axvline.assert_called_with(threshold)
+

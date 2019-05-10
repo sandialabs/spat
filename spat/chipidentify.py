@@ -41,6 +41,7 @@ _log = logging.getLogger('spat')
 from bitstring import Bits, BitStream
 from scipy.stats import gamma
 # scipy-ref.pdf Section 5.13 on page 390
+import matplotlib.pyplot as plt
 
 from spat.bitstringutils import hd
 
@@ -291,6 +292,8 @@ class ChipIdentify:
         return self.unstableBits[chip_name].count(1)
 
     def unstable_bits_valid (self, chip_name):
+        if chip_name not in self.measCount:
+            return False
         return self.measCount[chip_name] > 1
 
     def get_noise_dist_avg (self, chip_name):
@@ -318,7 +321,6 @@ class ChipIdentify:
         """Returns tuple (threshold, probability)"""
 
         if plot:
-            import matplotlib.pyplot as plt
             plt.ion()
             plt.clf()
 
