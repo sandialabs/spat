@@ -296,7 +296,7 @@ class ChipIdentifyTests(TestCase):
 
         val = self.ci.get_all_noise_dists()
 
-        self.assertEqual(len(val), 993)
+        self.assertEqual(len(val), 2001)
         self.assertLess(6.5, np.mean(val))
         self.assertLess(np.mean(val), 26)
         self.assertLess(1, np.std(val))
@@ -308,7 +308,7 @@ class ChipIdentifyTests(TestCase):
 
         val = self.ci.get_all_inter_chip_dists()
 
-        self.assertEqual(len(val), 31775)
+        self.assertEqual(len(val), 64015)
         self.assertLess(448, np.mean(val))
         self.assertLess(np.mean(val), 576)
         self.assertLess(1, np.std(val))
