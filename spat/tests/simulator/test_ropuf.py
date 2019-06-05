@@ -41,6 +41,7 @@ import xml.etree.ElementTree as etree
 import pkg_resources
 from itertools import repeat, combinations
 
+import numpy as np
 from bitstring import Bits, BitArray
 from spat.simulator.ropuf import Simulator
 from spat.simulator.abstractsimulator import NoiseWorker, InterChipWorker
@@ -143,16 +144,10 @@ class ROPUFSimulatorIntegrationTest(TestCase):
         self.mySim.setup(numVirtChips=10) # setup with defaults
 
     def test_interchip(self):
-        #import multiprocessing
-        #p = multiprocessing.Pool(multiprocessing.cpu_count())
-
         argIter = zip(repeat(self.mySim), combinations(range(self.mySim.numVirtChips), 2))
-        results = map(InterChipWorker, argIter)
+        results = list(map(InterChipWorker, argIter))
 
-        def mean(arr):
-            l = list(arr)
-            return sum(l) / len(l)
-        avg_interchip_dist = mean(results)
+        avg_interchip_dist = np.mean(results)
         print("Average inter-chip Hamming distance: %f" % (avg_interchip_dist))
 
         self.assertGreater(avg_interchip_dist, 0.4)
