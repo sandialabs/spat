@@ -85,6 +85,13 @@ class ChipIdentify:
     def __len__(self):
         return len(self.signatureMap)
 
+    def __eq__(self, other):
+        return self.measCount == other.measCount and \
+                self.signatureMap == other.signatureMap and \
+                self.noiseDistMap == other.noiseDistMap and \
+                self.interChipDistMap == other.interChipDistMap and \
+                self.unstableBits == other.unstableBits
+
     def load_chip_list(self, elem):
         for subel in elem:
             if subel.tag != 'chip':

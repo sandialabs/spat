@@ -178,9 +178,14 @@ class ChipIdentifyTests(TestCase):
             self.ci.save()
 
         m_open.assert_called_with(os.path.abspath(self.ci.fileName), 'w')
-        with open(self.ci.fileName, 'rb') as f_expect:
-            expect = f_expect.read()
-        self.assertEqual(expect, m_open().write.call_args_list[0][0][0])
+
+        m_open_load = mock_open(read_data=m_open().write.call_args_list[0][0][0])
+        with patch('builtins.open' if sys.version_info[0] > 2 \
+                else '__builtin__.open', m_open_load, create=True), \
+                patch('os.path.isfile', return_value=True):
+            test_ci = ChipIdentify(fileName=resource_filename('spat.tests', 'bogus'))
+
+        self.assertEqual(self.ci, test_ci)
 
     def test_identify(self):
         mm_d = {'t1': 0.5, 't2': 0.3, 't3': 0.1}
@@ -338,9 +343,18 @@ class ChipIdentifyTests(TestCase):
 
         m_ion.assert_called_with()
         m_clf.assert_called_with()
-        m_hist.assert_has_calls([
-                call([0, 1, 2, 3], normed=True),
-                call([1, 2, 1, 3, 4, 5], normed=True)])
+        assert_almost_equal(
+                sorted(m_hist.call_args_list[0][0][0]),
+                range(4))
+        self.assertEqual(
+                m_hist.call_args_list[0][1],
+                {'normed':True})
+        assert_almost_equal(
+                sorted(m_hist.call_args_list[1][0][0]),
+                [1, 1, 2, 3, 4, 5])
+        self.assertEqual(
+                m_hist.call_args_list[1][1],
+                {'normed':True})
         self.assertEqual(
                 m_plot.call_args_list[0][0][0],
                 range(0, 3))
@@ -354,5 +368,6 @@ class ChipIdentifyTests(TestCase):
                 m_plot.call_args_list[1][0][1],
                 np.array([0.0, 4.19025371e+06, 2.17501421e-01,
                            7.01039980e-02, 2.63226824e-02]), 2)
+# TODO there must be something random about pyplot.hist()
         m_axvline.assert_called_with(threshold)
 
