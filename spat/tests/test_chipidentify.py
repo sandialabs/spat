@@ -224,6 +224,39 @@ class ChipIdentifyTests(TestCase):
         self.ci.signatureMap['foo'] = 'bar'
         self.assertEqual(self.ci.get_sig('foo'), 'bar')
 
+    def test_update_unstable_bitmap(self):
+        first_meas = Bits('0xdeadbeef')
+        self.ci.n_bits = 32
+        self.ci.measCount['foo'] = 0
+        self.ci.update_unstable_bitmap('foo', first_meas)
+        self.ci.signatureMap['foo'] = first_meas
+        self.assertEqual(self.ci.unstableBits['foo'].count(1), 0)
+        self.ci.measCount['foo'] = 1
+        self.ci.update_unstable_bitmap('foo', Bits('0xde8dbeff'))
+        self.assertEqual(self.ci.unstableBits['foo'].count(1), 2)
+
+    def test_update_noise_dist(self):
+        self.ci.signatureMap['foo'] = Bits('0xdeadbeef')
+        self.ci.noiseDistMap['foo'] = [2]
+        self.ci.max_num_dists = 2
+        self.ci.update_noise_dist('foo', Bits('0xde8dbeff'))
+        self.assertEqual(len(self.ci.noiseDistMap['foo']), 2)
+        self.assertEqual(self.ci.noiseDistMap['foo'][-1], 2)
+        self.ci.update_noise_dist('foo', Bits('0xdeaffeed'))
+        self.assertEqual(len(self.ci.noiseDistMap['foo']), 2)
+        self.assertEqual(self.ci.noiseDistMap['foo'][-1], 3)
+
+    def test_update_interchip_dists(self):
+        new_meas = ~ self.ci.signatureMap['v002']
+        self.ci.update_interchip_dists('v001', new_meas)
+        self.assertEqual(self.ci.interChipDistMap['v001']['v002'][-1], 1024)
+        for i in range(self.ci.max_num_dists):
+            self.ci.update_interchip_dists('v001', new_meas)
+        self.assertEqual(len(self.ci.interChipDistMap['v001']['v002']), self.ci.max_num_dists)
+
+        self.ci.update_interchip_dists('foo', Bits(int=0, length=self.ci.n_bits))
+        self.assertEqual(self.ci.interChipDistMap['foo']['v001'], [513])
+
     def test_process_sig(self):
         self.ci.signatureMap['foo'] = 'baz'
         self.ci.measCount['foo'] = 42
