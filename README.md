@@ -310,19 +310,20 @@ the RO frequencies which were generated in the previous step. The magnitude of
 noise is also a parameter to the simulator. Then, the noisy RO frequencies are 
 compared to generate binary bits with varying stabilities.
 
-About Error Correction
-======================
+Error Correction
+================
 
-Please note that the facilities for performing ECC are included with the GUI, 
-but the binary executables are not included. These two binaries encode and
-decode the signatures using a BCH cyclic error-correcting code. When a measure-
-ment is made, the encode utility is used to create the syndrome. This syndrome
-is stored in the chip database and can be recalled to correct specific number
-of errors in subsequent measurements. 
+Please note that the facilities for performing ECC are included with the GUI,
+but this functionality requires the `bchlib` Python package. When a measure-
+ment is made, the encode utility is used to create the helper data. This helper
+data is stored in the chip database and can be recalled to correct a specific
+number of errors in subsequent measurements.
 
-The source code for the BCH encoder/decoder software from Micron Technology,
-Inc. <nandsupport@micron.com> was obtained at:
-http://www.codeforge.com/article/136423
+The `bchlib` package is available at:
+https://github.com/jkent/python-bchlib/
+or:
+https://pypi.org/project/bchlib
+
 
 Files
 =====

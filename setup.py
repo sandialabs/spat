@@ -38,7 +38,8 @@ requires = [
     'numpy' if sys.version_info[0] > 2 else 'numpy<1.17>=1.16',
     'scipy' if sys.version_info[0] > 2 else 'scipy<1.3>=1.2',
     'matplotlib<3.0',
-    'bitstring>=3.1,<3.2'
+    'bitstring>=3.1,<3.2',
+    'bchlib'
     ]
 
 test_requires = []

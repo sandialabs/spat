@@ -696,23 +696,23 @@ class Application(Frame):
         # Error correction filter
         if (self.correctVar.get() == 1):
             if ('corrector' not in self.__dict__ or chip_name != self.lastRead):
-                self.corrector = bch_code.bch_code()
-                if (self.chipIdentifier.get_meas_count(self.lastRead)):
-                    self.corrector.setup(self.chipIdentifier.get_sig(self.lastRead))
-                else:
-                    self.corrector.setup(new_bits)
+                enroll_meas = self.chipIdentifier.get_sig(self.lastRead) \
+                        if self.chipIdentifier.get_meas_count(self.lastRead) \
+                        else new_bits
+                self.corrector = bch_code.bch_code(enroll_meas)
+                if not self.chipIdentifier.get_meas_count(self.lastRead):
                     print "ECC Enrollment: ",
-                print "Syndrome:\n" + self.corrector.syndrome
+                print "Helper data:\n" + self.corrector.helper_data
 
             if (self.chipIdentifier.get_meas_count(self.lastRead) > 1):
                 print "ECC Recovery: ",
                 numErrors = hd(new_bits, self.chipIdentifier.get_sig(self.lastRead))
                 print "Errors from enrollment: %d" % numErrors
-                if numErrors > self.corrector.t:
-                    print "ERROR: Error Correction Code strength %d not enough to correct %d errors" % (self.corrector.t, numErrors)
+                if numErrors > self.corrector.bit_strength:
+                    print "ERROR: Error Correction Code strength %d not enough to correct %d errors" % (self.corrector.bit_strength, numErrors)
                 else:
                     try:
-                        corrected = self.corrector.decode(new_bits)
+                        corrected = self.corrector.regenerate(new_bits)
                         print "Errors corrected: %d" % hd(new_bits, corrected)
                         print "Errors after correction: %d" % hd(self.bits, corrected)
                         new_bits = corrected

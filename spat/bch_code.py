@@ -20,75 +20,20 @@
 import os, bitstring, random, math
 import subprocess
 
-from bitstringutils import *
+from bchlib import BCH
+
+from .bitstringutils import *
 
 class bch_code(object):
     """An error-correcting class"""
     
-    def __init__(self, nb=1024, fileName='bch_code_log.dat'):
-        self.nb = nb
-        self.bit_flips = None
-        self.logFileName = fileName
-        self.logFile = open(self.logFileName, 'ab')
+    def __init__(self, first_measurement, gen_poly=0x25AF, bit_strength=32):
+        """A function to enroll the PUF with the error corrector object and
+        generate helper data for subsequent regeneration"""
+        self.codec = BCH(gen_poly, bit_strength)
+        self.bit_strength = bit_strength
+        self.helper_data = self.codec.encode(first_measurement.bytes)
     
-    def __destroy__(self):
-        self.close()
-
-    def close(self):
-        if (not self.logFile.closed):
-            self.logFile.close()
-
-    def setup(self, first_measurement, MM=13, TT=20, KK=1024, PP=8):
-        """A function to enroll the PUF with the error corrector object
-        
-    Arguments:
-    MM <field>:  Galois field, GF, for code.  Code length is 2^<field>-1.
-         The default value is 13 for a code length 8191.  If the parameter is
-         set to 0, the program will estimate the value based upon the values
-         chosen for k and t.
-    TT <correct>:  Correction power of the code.  Default = 4
-    KK <data bits>:  Number of data bits to be encoded. Must divide 4.
-         The default value is the maximum supported by the code which
-         depends upon the field (-m) and the correction (-t) chosen.
-    PP <parallel>:  Parallelism in encoder.  Does not effect results but
-         does change the algorithm used to generate them.  Default = 8"""
-
-        self.m = MM; self.t = TT; self.k = KK; self.p = PP
-        p = subprocess.Popen("bch_encoder.exe -m %d -t %d -k %d -p %d" % (self.m, self.t, self.k, self.p), stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        p.stdin.write(first_measurement.hex)
-        output, errors = p.communicate()
-        codeword, syndrome = output.split()
-        self.syndrome = syndrome
-        return self.syndrome
-    
-    def decode(self, response):
-        p = subprocess.Popen("bch_decoder.exe -m %d -t %d -k %d -p %d" % (self.m, self.t, self.k, self.p), stdin=subprocess.PIPE, stdout=subprocess.PIPE)
-        p.stdin.write(response.hex + self.syndrome + "\n")
-        p.stdin.close()
-        output, errors = p.communicate()
-        if len (output.strip()) != self.nb / 4:
-            raise ValueError ("Invalid signature returned from decoder")
-
-        return bitstring.Bits(hex="0x"+output.strip())
-        
-if __name__=="__main__":
-    print "Running self-test"
-
-    import simulator
-    mySim = simulator.Simulator()
-    mySim.setup()
-
-    firstMeasurement = mySim.next()
-    print firstMeasurement.hex
-    myCoder = bch_code()
-    helper_data = myCoder.setup(firstMeasurement) # setup with defaults
-
-    print "Syndrome: " + myCoder.syndrome
-
-    newMeasurement = mySim.next()
-    print "(Possibly-) Errored Measurement:\n" + newMeasurement.hex
-    print "Errors: " + str(hd(firstMeasurement, newMeasurement))
-    print "Recovered:\n" + myCoder.decode(newMeasurement).hex
-    print "Reduced errors: " + str(hd(firstMeasurement, myCoder.decode(newMeasurement)))
-    
-    print "Done!"
+    def regenerate(self, response):
+        n_err_detected, corrected, _ = self.codec.decode(response.bytes, self.helper_data)
+        return bitstring.Bits(bytes=corrected)
