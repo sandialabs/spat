@@ -48,10 +48,10 @@ _log = logging.getLogger('spat')
 class AbstractSimulator(object):
     """An abstract class for PUF simulators."""
 
-    def __init__(self, n_bits=1024):
+    def __init__(self, n_bits=1024, setup_file='data/Simulator/simulator_setup.xml'):
         self.n_bits = n_bits
         self.bit_flips = None
-        self.setup_file = 'data/Simulator/simulator_setup.xml'
+        self.setup_file = setup_file
         setup_dir = os.path.dirname(self.setup_file)
         if (not os.path.isdir(setup_dir)):
             os.makedirs(setup_dir)

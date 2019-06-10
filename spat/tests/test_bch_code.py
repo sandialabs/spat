@@ -59,7 +59,7 @@ class BCHTests(TestCase):
     'BCH encode/decode tests'
 
     def setUp(self):
-        self.mySim = Simulator()
+        self.mySim = Simulator(setup_file=resource_filename('spat.tests', 'data/simulator_setup.py'))
         self.mySim.setup()
 
     def test_bchlib(self):
