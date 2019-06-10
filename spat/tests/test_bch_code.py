@@ -67,7 +67,7 @@ class BCHTests(TestCase):
         print('First measurement:\n'+firstMeasurement.hex)
         myCoder = BCH(0x25AF, 20)
         helper_data = myCoder.encode(firstMeasurement.bytes)
-        print("Helper data: " + b2a_hex(helper_data))
+        print("Helper data: "+str(b2a_hex(helper_data)))
 
         newMeasurement = self.mySim.next()
         print('Probably-Errored Measurement:\n' + newMeasurement.hex)
@@ -77,7 +77,7 @@ class BCHTests(TestCase):
         self.assertLess(n_err, 20)
         n_err_detected, corrected, _ = myCoder.decode(newMeasurement.bytes, helper_data)
         print('Detected Bit Errors: '+str(n_err_detected))
-        print('Recovered:\n'+b2a_hex(corrected))
+        print('Recovered:\n'+str(b2a_hex(corrected)))
         n_err_remaining = hd(firstMeasurement, corrected)
         print('Remaining errors: '+str(n_err_remaining))
         self.assertEqual(n_err_remaining, 0)
