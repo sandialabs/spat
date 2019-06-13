@@ -127,66 +127,6 @@ class ChipIdentifyTests(TestCase):
         m_signatureMap.__len__.assert_called()
         self.assertEqual(retval, 0)
 
-    def test_load(self):
-
-        self.ci.fileName = resource_filename('spat.tests', 'data/signatures.xml')
-        self.ci.load()
-
-        self.assertEqual(self.ci.n_bits, 1024)
-        self.assertEqual(len(self.ci.noiseDistMap), 32)
-        self.assertEqual(len(self.ci.signatureMap), 32)
-        self.assertEqual(len(self.ci.unstableBits), 32)
-
-        for i in range(32):
-            iname = vname(i)
-            self.assertIn(iname, self.ci.measCount)
-            self.assertGreater(self.ci.measCount[iname], 32)
-
-            self.assertEqual(len(self.ci.interChipDistMap[iname]), 31)
-            for j in range(32):
-                if i == j:
-                    continue
-
-                jname = vname(j)
-                self.assertGreater(len(self.ci.interChipDistMap[iname][jname]), 31)
-                ic_avg = np.mean(self.ci.interChipDistMap[iname][jname])
-                self.assertGreater(ic_avg, 200)
-                self.assertLess(ic_avg, 800)
-
-            self.assertGreater(len(self.ci.noiseDistMap[iname]), 30)
-            nd_avg = np.mean(self.ci.noiseDistMap[iname])
-            self.assertGreater(nd_avg, 1)
-            self.assertLess(nd_avg, 20)
-
-            self.assertEqual(len(self.ci.signatureMap[iname]), 1024)
-            sig_hw = self.ci.signatureMap[iname].count(1)
-            self.assertGreater(sig_hw, 384)
-            self.assertLess(sig_hw, 640)
-
-            self.assertEqual(len(self.ci.unstableBits[iname]), 1024)
-            sig_hw = self.ci.unstableBits[iname].count(1)
-            self.assertGreater(sig_hw, 0)
-            self.assertLess(sig_hw, 96)
-
-    def test_save(self):
-        self.ci.fileName = resource_filename('spat.tests', 'data/signatures.xml')
-        self.ci.load()
-
-        m_open = mock_open()
-        with patch('builtins.open' if sys.version_info[0] > 2 \
-                else '__builtin__.open', m_open, create=True):
-            self.ci.save()
-
-        m_open.assert_called_with(os.path.abspath(self.ci.fileName), 'w')
-
-        m_open_load = mock_open(read_data=m_open().write.call_args_list[0][0][0])
-        with patch('builtins.open' if sys.version_info[0] > 2 \
-                else '__builtin__.open', m_open_load, create=True), \
-                patch('os.path.isfile', return_value=True):
-            test_ci = ChipIdentify(fileName=resource_filename('spat.tests', 'bogus'))
-
-        self.assertEqual(self.ci, test_ci)
-
     def test_identify(self):
         mm_d = {'t1': 0.5, 't2': 0.3, 't3': 0.1}
         with patch.object(self.ci, 'match_map', return_value=mm_d) as m_match_map:
@@ -271,13 +211,6 @@ class ChipIdentifyTests(TestCase):
         m_noise.assert_called_with('foo', 'bar')
         m_interchip.assert_called_with('foo', 'bar')
 
-    def test_get_meas_count(self):
-        self.ci.fileName = resource_filename('spat.tests', 'data/signatures.xml')
-        self.ci.load()
-
-        self.assertEqual(self.ci.get_meas_count('v001'), 34)
-        self.assertEqual(self.ci.get_meas_count('bogus'), 0)
-
     def test_num_unstable_bits(self):
         self.ci.unstableBits['foo'] = Bits('0b00010101')
 
@@ -320,41 +253,6 @@ class ChipIdentifyTests(TestCase):
         self.assertAlmostEqual(
                 self.ci.get_inter_dist_avg('v003'),
                 13.666666666666666)
-
-# Parameters used to generate data file:
-# <setup noise_mu="0.0" noise_sd="0.1" param_mu="13.0" param_sd="5.0" />
-    def test_get_all_noise_dists(self):
-        self.ci.fileName = resource_filename('spat.tests', 'data/signatures.xml')
-        self.ci.load()
-
-        val = self.ci.get_all_noise_dists()
-
-        self.assertEqual(len(val), 2001)
-        self.assertLess(6.5, np.mean(val))
-        self.assertLess(np.mean(val), 26)
-        self.assertLess(1, np.std(val))
-        self.assertLess(np.std(val), 10)
-
-    def test_get_all_inter_chip_dists(self):
-        self.ci.fileName = resource_filename('spat.tests', 'data/signatures.xml')
-        self.ci.load()
-
-        val = self.ci.get_all_inter_chip_dists()
-
-        self.assertEqual(len(val), 64015)
-        self.assertLess(448, np.mean(val))
-        self.assertLess(np.mean(val), 576)
-        self.assertLess(1, np.std(val))
-        self.assertLess(np.std(val), 32)
-
-    def test_prob_alias(self):
-        self.ci.fileName = resource_filename('spat.tests', 'data/signatures.xml')
-        self.ci.load()
-
-        threshold, prob = self.ci.prob_alias(False)
-        self.assertLess(10, threshold)
-        self.assertLess(threshold, 30)
-        self.assertLess(prob, 1e-20)
 
     def test_prob_alias_plot(self):
         self.ci.interChipDistMap = {
@@ -403,4 +301,95 @@ class ChipIdentifyTests(TestCase):
                            7.01039980e-02, 2.63226824e-02]), 2)
 # TODO there must be something random about pyplot.hist()
         m_axvline.assert_called_with(threshold)
+
+class ChipIdentifyLoadedTests(TestCase):
+    'ChipIdentify loaded unit tests'
+
+    def setUp(self):
+        self.ci = ChipIdentify(fileName=resource_filename('spat.tests', 'data/example_setup.xml'))
+        self.ci.fileName = resource_filename('spat.tests', 'data/signatures.xml')
+        self.ci.load()
+
+    def test_load(self):
+        self.assertEqual(self.ci.n_bits, 1024)
+        self.assertEqual(len(self.ci.noiseDistMap), 32)
+        self.assertEqual(len(self.ci.signatureMap), 32)
+        self.assertEqual(len(self.ci.unstableBits), 32)
+
+        for i in range(32):
+            iname = vname(i)
+            self.assertIn(iname, self.ci.measCount)
+            self.assertGreater(self.ci.measCount[iname], 32)
+
+            self.assertEqual(len(self.ci.interChipDistMap[iname]), 31)
+            for j in range(32):
+                if i == j:
+                    continue
+
+                jname = vname(j)
+                self.assertGreater(len(self.ci.interChipDistMap[iname][jname]), 31)
+                ic_avg = np.mean(self.ci.interChipDistMap[iname][jname])
+                self.assertGreater(ic_avg, 200)
+                self.assertLess(ic_avg, 800)
+
+            self.assertGreater(len(self.ci.noiseDistMap[iname]), 30)
+            nd_avg = np.mean(self.ci.noiseDistMap[iname])
+            self.assertGreater(nd_avg, 1)
+            self.assertLess(nd_avg, 20)
+
+            self.assertEqual(len(self.ci.signatureMap[iname]), 1024)
+            sig_hw = self.ci.signatureMap[iname].count(1)
+            self.assertGreater(sig_hw, 384)
+            self.assertLess(sig_hw, 640)
+
+            self.assertEqual(len(self.ci.unstableBits[iname]), 1024)
+            sig_hw = self.ci.unstableBits[iname].count(1)
+            self.assertGreater(sig_hw, 0)
+            self.assertLess(sig_hw, 96)
+
+    def test_save(self):
+        m_open = mock_open()
+        with patch('builtins.open' if sys.version_info[0] > 2 \
+                else '__builtin__.open', m_open, create=True):
+            self.ci.save()
+
+        m_open.assert_called_with(os.path.abspath(self.ci.fileName), 'w')
+
+        m_open_load = mock_open(read_data=m_open().write.call_args_list[0][0][0])
+        with patch('builtins.open' if sys.version_info[0] > 2 \
+                else '__builtin__.open', m_open_load, create=True), \
+                patch('os.path.isfile', return_value=True):
+            test_ci = ChipIdentify(fileName=resource_filename('spat.tests', 'bogus'))
+
+        self.assertEqual(self.ci, test_ci)
+
+    def test_get_meas_count(self):
+        self.assertEqual(self.ci.get_meas_count('v001'), 34)
+        self.assertEqual(self.ci.get_meas_count('bogus'), 0)
+
+# Parameters used to generate data file:
+# <setup noise_mu="0.0" noise_sd="0.1" param_mu="13.0" param_sd="5.0" />
+    def test_get_all_noise_dists(self):
+        val = self.ci.get_all_noise_dists()
+
+        self.assertEqual(len(val), 2001)
+        self.assertLess(6.5, np.mean(val))
+        self.assertLess(np.mean(val), 26)
+        self.assertLess(1, np.std(val))
+        self.assertLess(np.std(val), 10)
+
+    def test_get_all_inter_chip_dists(self):
+        val = self.ci.get_all_inter_chip_dists()
+
+        self.assertEqual(len(val), 64015)
+        self.assertLess(448, np.mean(val))
+        self.assertLess(np.mean(val), 576)
+        self.assertLess(1, np.std(val))
+        self.assertLess(np.std(val), 32)
+
+    def test_prob_alias(self):
+        threshold, prob = self.ci.prob_alias(False)
+        self.assertLess(10, threshold)
+        self.assertLess(threshold, 30)
+        self.assertLess(prob, 1e-20)
 
