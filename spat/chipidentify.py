@@ -251,6 +251,9 @@ class ChipIdentify:
             self.unstableBits[chip_name] = self.unstableBits[chip_name] | (self.signatureMap[chip_name] ^ sig) 
 
     def update_noise_dist(self, chip_name, sig):
+        if chip_name not in self.noiseDistMap.keys():
+            self.noiseDistMap[chip_name] = []
+
         self.noiseDistMap[chip_name].append(hd(sig, self.signatureMap[chip_name]))
         # for scalability, truncate this list 
         if len(self.noiseDistMap[chip_name]) > self.max_num_dists:
