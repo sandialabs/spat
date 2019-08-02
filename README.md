@@ -21,7 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 <a href="https://travis-ci.com/sandialabs/spat">
-    <img src="https://api.travis-ci.com/sandialabs/spat.svg?branch=py2to3" 
+    <img src="https://api.travis-ci.com/sandialabs/spat.svg?branch=py2to3"
          alt="Travis CI Build Status">
 </a>
 
@@ -46,32 +46,60 @@ Application
 
 The program was designed to be used in an educational setting to allow users
 to interact with PUFs and analyze their performance. This framework serves as
-a step to making PUFs more practical and more broadly understood. 
+a step to making PUFs more practical and more broadly understood.
 
 Requirements
 ------------
 
-SPAT requires Python 2. It is tested with Python 2.7. Python is freely
+SPAT supports Python versions 2.7 or 3.5 or greater. Python is freely
 available from the Python Software Foundation at:
 
-    www.python.org
+* www.python.org
 
-The following packages for Python are required for additional features:
+The following packages for Python are also required:
 
-    tkinter numpy matplotlib scipy
+* tkinter
+* numpy
+* matplotlib
+* scipy
 
-These packages are available on most GNU/Linux distributions. Unofficial Windows
-binaries for these packages are available from UCI at:
+These packages are available on most GNU/Linux distributions.
+
+### Windows
+
+Unofficial Windows binaries for these packages are available from UCI at:
 
     http://www.lfd.uci.edu/~gohlke/pythonlibs/
 
 Otherwise, these packages are available from their respective websites:
 
-    NumPy at www.numpy.org
+* NumPy at www.numpy.org
+* matplotlib at matplotlib.org
+* SciPy at scipy.org
 
-    matplotlib at matplotlib.org
+### Ubuntu
 
-    SciPy at scipy.org
+Install the dependencies for Python 3 using:
+```
+sudo apt-get install python3 python3-tk python-pip python3-setuptools python3-wheel
+```
+
+Or, you may install the dependencies for Python 2 (end of life in year 2020):
+```
+sudo apt-get install python-tk python-pip python-setuptools python-wheel
+```
+
+### Fedora
+
+```
+sudo dnf install python3 python3-tkinter
+```
+
+### Red Hat Enterprise Linux / CentOS
+
+```
+yum install tkinter
+```
 
 Installation
 ------------
@@ -88,13 +116,10 @@ double-click:
 
     spat.bat
 
-### Ubuntu
 
-  > apt install python python-pip python-tk
+Starting the GUI
+================
 
-### Red Hat
-
-  > yum install tkinter
 
 
 Tutorial
@@ -120,10 +145,10 @@ bottom center of the bitmap. The color scheme can also be changed here.
 Note that the simulator parameters are printed at the bottom of the screen
 below the legend. P stands for parametric (as in, one of a set of measurable
 factors), and E stands for error. In our simulator terminology, a PUF consists
-of a set of parametrics that exhibit a level of noise when they are measured. 
+of a set of parametrics that exhibit a level of noise when they are measured.
 Hence, measurements of the parametrics are modeled by a distribution which has
-a mean value P_mu and a standard deviation P_sd, and noise is added to this 
-which follows another distribution with mean E_mu and standard deviation E_sd. 
+a mean value P_mu and a standard deviation P_sd, and noise is added to this
+which follows another distribution with mean E_mu and standard deviation E_sd.
 Other PUF sources can display other information here on the front panel.
 
 Continue clicking Next or pressing the space bar to advance the measurement.
@@ -151,7 +176,7 @@ Statistical Test Suite for Random and Pseudorandom Number Generators for
 Cryptographic Applications". These metrics will be updated whenever a new
 measurement is made as long as the Randomness Checks window is open. Please
 note that it is normal for some of these checks to fail most of the time for a
-given PUF architecture. 
+given PUF architecture.
 
 Next, select Analyze -> Draw Histograms from the menu. A new window will pop up
 displaying the noise and inter-chip histograms. Each time a measurement is
@@ -161,12 +186,12 @@ chips measured, one inter-chip distance is stored for each other chip that is
 known. Unlike the Randomness Checks window, this display will not update when
 you click Next. This decision was made to keep the amount of time required to
 update the display low. There are several historgram types which can be
-selected. These are simple, split and cumulative, which all display the same 
+selected. These are simple, split and cumulative, which all display the same
 information in different ways. The simple option plots the inter-chip and noise
 distributions directly. The split option shows the inter-chip and noise
-distributions in separate plots that are stacked vertically. The cumulative 
+distributions in separate plots that are stacked vertically. The cumulative
 option shows the effective cumulative distribution function for the samples of
-inter-chip and noise distances. 
+inter-chip and noise distances.
 
 Finally, select Analyze -> Save Report if you would like to output all of the
 metrics to a file.
@@ -225,7 +250,7 @@ The last item in this menu allows the user to disable the probability of
 aliasing metric display on the front panel. This display should be disabled
 when there are a large number of chips in the signature database. This metric
 is computed each time a measurement is made and can make the interface very
-slow when using a large number of chips. 
+slow when using a large number of chips.
 
 Analyze Submenu
 ---------------
@@ -236,7 +261,7 @@ histogram types can be plotted, and a report can be generated.
 The Randomness checks are metrics published in NIST SP 800-22 and can help the
 user decide if the current PUF response is random or not. Please note that it
 is normal for some of these checks to fail most of the time for a given PUF
-architecture. 
+architecture.
 
 The histograms help the user decide the PUF signal to noise ratio. The ideal
 Hamming distance between two PUF responses is 50% of the bits. The ideal Hamming
@@ -279,7 +304,7 @@ the similarity, in % bits, between the current PUF measurement and the closest
 of the signatures in the database. Next is the number of flipped bits between
 the current measurement and the previous one. This is reported as both a
 fraction and a percentage. Next, the number of unstable bits is reported. A bit
-map is maintained of unstable bits using the logical OR of the bit map 
+map is maintained of unstable bits using the logical OR of the bit map
 (initially all zeros) with the XOR of the current measurement and the previous
 measurement.  Effectively, bits that flip between two consecutive measurements
 are forever set in the unstable bit map. Next is the average noise and inter-
@@ -305,9 +330,9 @@ oscillator (RO) PUF. When the simulator is first run, it generates a sample of
 virtual chips. For each chip, it generates a collection of RO frequencies. These
 frequencies are taken from a normal distribution (random.normalvariate). The
 default parameters for this distribution are specified in the simulator.py file.
-To generate a binary signature for one of the virtual chips, noise is added to 
-the RO frequencies which were generated in the previous step. The magnitude of 
-noise is also a parameter to the simulator. Then, the noisy RO frequencies are 
+To generate a binary signature for one of the virtual chips, noise is added to
+the RO frequencies which were generated in the previous step. The magnitude of
+noise is also a parameter to the simulator. Then, the noisy RO frequencies are
 compared to generate binary bits with varying stabilities.
 
 Error Correction
