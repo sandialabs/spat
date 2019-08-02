@@ -63,6 +63,11 @@ setup(
     keywords = "education hardware security random physical unclonable function",
     url = "http://github.com/sandialabs/spat",
     packages=['spat'],
+    entry_points={
+        'gui_scripts': [
+            'spat = spat.__main__:main',
+        ]
+    },
     install_requires=requires,
     tests_require=test_requires,
     test_suite='spat.tests',
