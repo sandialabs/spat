@@ -1,4 +1,5 @@
-#!/usr/local/bin/python
+#!/usr/bin/env python
+from __future__ import print_function
 
 """
 spat.py - A Python TkInter GUI for visually measuring and
@@ -40,15 +41,21 @@ may require a license from the United States Government.
 
 __credits__ = ["Ryan Helinski", "Mitch Martin", "Jason Hamlet", "Todd Bauer", "Bijan Fakhri"]
 
-from Tkinter import *
-import tkFont
-import tkFileDialog
-import tkSimpleDialog
-import tkMessageBox
+import logging
+import sys
 import math
 import os
 import time
 from collections import OrderedDict
+
+if sys.version_info.major < 3:
+    from Tkinter import *
+else:
+    from tkinter import *
+import tkFont
+import tkFileDialog
+import tkSimpleDialog
+import tkMessageBox
 
 # Local packages
 from sigfile import *
@@ -123,14 +130,14 @@ class Application(Frame):
         self.master.title(" - ".join(["PUF Visual Interface", self.statusStr]))
 
     def _delete_window(self):
-        print 'Caught delete_window event'
+        _log.debug('Caught delete_window event')
         self.save()
         self.master.destroy()
 
     def _destroy(self, event=None):
-        print 'Caught destroy event'
+        _log.debug('Caught destroy event')
         if event:
-            print event
+            _log.debug(event)
         self.save()
 
     def quit(self, event=None):
@@ -401,7 +408,7 @@ class Application(Frame):
             self.virtChipNumVar.set("v%03d" % random.randint(1, len(self.bitSource.chipNames)))
 
     def selectECC(self):
-        print "ECC: " + ("Off" if self.correctVar.get() == 0 else "On")
+        _log.info("ECC: " + ("Off" if self.correctVar.get() == 0 else "On"))
 
     def onModeSelect(self, *args):
         if self.sourceSelected.get() != self.oldMode:
@@ -454,7 +461,7 @@ class Application(Frame):
                 'Not Connected'
                 )
         self.updateTitle()
-        print self.statusStr
+        _log.info(self.statusStr)
 
     def updateWidgets(self):
         scores = sorted(self.chipIdentifier.match_map(self.bits).items(), key=lambda item: item[1])[0:self.numMatchScores]
@@ -527,59 +534,58 @@ class Application(Frame):
         def fmtUnstableBitMap(unstableBits):
             return "\nUnstable Bit Map: " + unstableBits.hex
 
-        print >> reportFile, fmtHeadingString("PUF Analysis Report File", "=")
+        reportFile.write(fmtHeadingString("PUF Analysis Report File", "="))
 
+        if 'bitSource' in self.__dict__ and isinstance(self.bitSource, QuartusCon):
+            reportFile.write("Board Temperature: %0.2f deg. C, %0.2f deg. F" % \
+                    (self.bitSource.get_temp(), self.bitSource.get_temp("F")))
+        elif 'bitSource' in self.__dict__ and isinstance(self.bitSource, Simulator):
+            reportFile.write('Simulator Setup: %s' % self.bitSource.getSetupStr())
 
-        if ('bitSource' in self.__dict__ and type(self.bitSource) == type(QuartusCon())):
-            print >> reportFile, "Board Temperature: %0.2f deg. C, %0.2f deg. F" % \
-                    (self.bitSource.get_temp(), self.bitSource.get_temp("F"))
-        elif ('bitSource' in self.__dict__ and type(self.bitSource) == type(Simulator())):
-            print >> reportFile, 'Simulator Setup: %s' % self.bitSource.getSetupStr()
-
-        print >> reportFile, fmtHeadingString("Current Measurement")
+        reportFile.write(fmtHeadingString("Current Measurement"))
         # Could draw an ASCII representation here
-        print >> reportFile, fmtNameAndSig(self.lastRead, self.bits)
-        print >> reportFile, fmtUnstableBitMap(self.chipIdentifier.unstableBits[self.lastRead])
+        reportFile.write(fmtNameAndSig(self.lastRead, self.bits))
+        reportFile.write(fmtUnstableBitMap(self.chipIdentifier.unstableBits[self.lastRead]))
 
-        print >> reportFile, fmtHeadingString("Scoreboard")
+        reportFile.write(fmtHeadingString("Scoreboard"))
         scores = sorted(self.chipIdentifier.match_map(self.bits).items(), key=lambda item: item[1])[0:self.numMatchScores]
         for i in range(len(scores)):
-            print >> reportFile, scores[i][0], "\t", '%0.2f %%' % (100-scores[i][1]*100)
+            reportFile.write(scores[i][0], "\t", '%0.2f %%' % (100-scores[i][1]*100))
 
-        print >> reportFile, fmtHeadingString('PUF Metrics')
-        if(self.measurementCounter>0):
-            print >> reportFile, "Bit Flips: " + fmtFractionPercent(self.bitFlips, self.nb)
+        reportFile.write(fmtHeadingString('PUF Metrics'))
+        if self.measurementCounter>0:
+            reportFile.write("Bit Flips: " + fmtFractionPercent(self.bitFlips, self.nb))
 
-        if(self.chipIdentifier.unstable_bits_valid(self.lastRead)):
-            print >> reportFile, "Unstable Bits: " + fmtFractionPercent(self.chipIdentifier.get_num_unstable_bits(self.lastRead), self.nb)
-            print >> reportFile, "Average Noise Distance: " + fmtFractionPercent(self.chipIdentifier.get_noise_dist_avg(self.lastRead), self.nb)
+        if self.chipIdentifier.unstable_bits_valid(self.lastRead):
+            reportFile.write("Unstable Bits: " + fmtFractionPercent(self.chipIdentifier.get_num_unstable_bits(self.lastRead), self.nb))
+            reportFile.write("Average Noise Distance: " + fmtFractionPercent(self.chipIdentifier.get_noise_dist_avg(self.lastRead), self.nb))
 
-        if (self.lastRead in self.chipIdentifier.interChipDistMap):
-            print >> reportFile, "Average Inter-Chip Distance: " + fmtFractionPercent(self.chipIdentifier.get_inter_dist_avg(self.lastRead), self.nb)
+        if self.lastRead in self.chipIdentifier.interChipDistMap:
+            reportFile.write("Average Inter-Chip Distance: " + fmtFractionPercent(self.chipIdentifier.get_inter_dist_avg(self.lastRead), self.nb))
 
         if self.chipIdentifier.get_meas_count(self.lastRead) > 2 and len(self.chipIdentifier) > 2:
-            print >> reportFile, "Probability of Aliasing: " + ( "%.3e" % (self.chipIdentifier.prob_alias()[1]) )
+            reportFile.write("Probability of Aliasing: " + ( "%.3e" % (self.chipIdentifier.prob_alias()[1]) ))
 
-        print >> reportFile, "Measurement Count: " + ("Meas. #: %d" % (self.chipIdentifier.get_meas_count(self.lastRead)))
+        reportFile.write("Measurement Count: " + ("Meas. #: %d" % (self.chipIdentifier.get_meas_count(self.lastRead))))
 
-        print >> reportFile, fmtHeadingString("Randomness Checks")
+        reportFile.write(fmtHeadingString("Randomness Checks"))
         for i, (name, fun) in enumerate(self.randomnessFunMap.items()):
             fun_metric, fun_pass = fun(self.bits)
-            print >> reportFile, "%20s %.10e" % (name, fun_metric), fun_pass
+            reportFile.write("%20s %.10e" % (name, fun_metric), fun_pass)
 
-        print >> reportFile, fmtHeadingString("Other Signatures")
+        reportFile.write(fmtHeadingString("Other Signatures"))
         for name, signature in self.chipIdentifier.signatureMap.items():
-            if (name != self.lastRead):
-                print >> reportFile, fmtNameAndSig(name, signature)+"\n"
+            if name != self.lastRead:
+                reportFile.write(fmtNameAndSig(name, signature))
 
     def updateChipPicker(self):
         """This updates the optionmenu for picking a virtual chip from the sample of virtual chips. Applies only to the simulator. """
-        if (self.sourceSelected.get() == 'Simulator') and ('bitSource' in self.__dict__) and (type(self.bitSource) == Simulator):
+        if (self.sourceSelected.get() == 'Simulator') and ('bitSource' in self.__dict__) and isinstance(self.bitSource, Simulator):
             self.virtChipSelect = OptionMenu(self.buttonFrame, self.virtChipNumVar, *self.bitSource.chipNames)
             self.virtChipNumVar.set(self.bitSource.chipNames[0])
             self.virtChipNumVar.trace('w', self.onVirtChipSelect)
             self.virtChipSelect.grid(row=0, column=2, padx=4, pady=4)
-        elif ('virtChipSelect' in self.__dict__):
+        elif 'virtChipSelect' in self.__dict__:
             self.virtChipSelect.grid_forget()
 
     def onVirtChipSelect(self, *args):
@@ -590,25 +596,25 @@ class Application(Frame):
         """Open one of the available interfaces"""
 
         # Clean up if a connection is already open
-        if ('bitSource' in self.__dict__):
+        if 'bitSource' in self.__dict__:
             self.bitSource.close()
             del self.bitSource
         error = False
 
         # Reset error correction
-        if ('corrector' in self.__dict__):
+        if 'corrector' in self.__dict__:
             del self.corrector
 
         sigFileName = os.path.join(self.outputPath, self.sourceSelected.get(), 'signatures.xml')
 
-        if (self.sourceSelected.get() == 'Simulator'):
+        if self.sourceSelected.get() == 'Simulator':
             self.bitSource = Simulator()
             self.bitSource.setup()
-            if (not os.path.isfile(sigFileName)):
-                print "Generating signature DB for simulator virtual chips...",
+            if not os.path.isfile(sigFileName):
+                _log.info("Generating signature DB for simulator virtual chips...")
                 self.bitSource.makeSigFile(sigFileName)
-                print "OK"
-        elif (self.sourceSelected.get() == 'File'):
+                _log.info("Done generating signature DB for simulator virtual chips")
+        elif self.sourceSelected.get() == 'File':
             filename = tkFileDialog.askopenfilename(
                             defaultextension=".dat",
                             filetypes=[("Binary Data", ".dat")],
@@ -626,7 +632,7 @@ class Application(Frame):
                     cdf_filename=self.quartusSources[self.sourceSelected.get()]['cdf_filename'])
             self.bitSource.program()
         else:
-            print 'Invalid source'
+            _log.error('Invalid source')
 
         if (not error):
             self.lastRead = ""
@@ -674,7 +680,7 @@ class Application(Frame):
         # Determine chip's name
         if len(self.chipIdentifier)>0:
             chip_name, match_dist = self.chipIdentifier.identify(new_bits)
-            print "Best match for signature: %s with %6f Hamming distance" % (chip_name, match_dist)
+            _log.info("Best match for signature: %s with %6f Hamming distance" % (chip_name, match_dist))
         if len(self.chipIdentifier)==0 or match_dist > self.noiseThreshold:
             # Don't know this chip
             chip_name = tkSimpleDialog.askstring('Enter Chip Name', 'The noise threshold (%02d %%) has been exceeded or this is a new chip.\nPlease enter its name:' % (100*self.noiseThreshold), initialvalue=chip_name if len(self.chipIdentifier)>0 else '')
@@ -688,7 +694,7 @@ class Application(Frame):
                 if 'sigFileWriter' in self.__dict__:
                     self.sigFileWriter.close()
                 filePath = self.getChipDatPath(chip_name)
-                print "Saving PUF data to '%s'" % filePath
+                _log.info("Saving PUF data to '%s'" % filePath)
                 self.sigFileWriter = SigFile(filePath, mode='a')
             self.sigFileWriter.append(new_bits)
             self.sigFileWriter.save() # TODO delay this
@@ -701,37 +707,38 @@ class Application(Frame):
                         else new_bits
                 self.corrector = bch_code.bch_code(enroll_meas)
                 if not self.chipIdentifier.get_meas_count(self.lastRead):
-                    print "ECC Enrollment: ",
-                print "Helper data:\n" + self.corrector.helper_data
+                    _log.info("ECC Enrollment: ")
+                _log.info("Helper data:\n" + self.corrector.helper_data)
 
             if (self.chipIdentifier.get_meas_count(self.lastRead) > 1):
-                print "ECC Recovery: ",
+                _log.info("ECC Recovery: ")
                 numErrors = hd(new_bits, self.chipIdentifier.get_sig(self.lastRead))
-                print "Errors from enrollment: %d" % numErrors
+                _log.info("Errors from enrollment: %d" % numErrors)
                 if numErrors > self.corrector.bit_strength:
-                    print "ERROR: Error Correction Code strength %d not enough to correct %d errors" % (self.corrector.bit_strength, numErrors)
+                    _log.error("Error Correction Code strength %d not enough to correct %d errors" % (self.corrector.bit_strength, numErrors))
                 else:
                     try:
                         corrected = self.corrector.regenerate(new_bits)
-                        print "Errors corrected: %d" % hd(new_bits, corrected)
-                        print "Errors after correction: %d" % hd(self.bits, corrected)
+                        _log.info("Errors corrected: %d" % hd(new_bits, corrected))
+                        _log.info("Errors after correction: %d" % hd(self.bits, corrected))
                         new_bits = corrected
                     except ValueError as e:
-                        print "Call to ECC process failed!"
+                        _log.error("Call to ECC process failed!")
+                        _log.error(e)
 
         self.lastRead = chip_name
 
         # Report on unstable bits
         if self.chipIdentifier.unstable_bits_valid(self.lastRead):
-            print "Unstable bits: %d / %d = %.3f %%" % (self.chipIdentifier.get_num_unstable_bits(self.lastRead), self.nb, (float(self.chipIdentifier.get_num_unstable_bits(self.lastRead))/self.nb)*100)
-            print "Unstable bit map:"
-            print repr(self.chipIdentifier.unstableBits[self.lastRead])
+            _log.info("Unstable bits: %d / %d = %.3f %%" % (self.chipIdentifier.get_num_unstable_bits(self.lastRead), self.nb, (float(self.chipIdentifier.get_num_unstable_bits(self.lastRead))/self.nb)*100))
+            _log.info("Unstable bit map:")
+            _log.info(repr(self.chipIdentifier.unstableBits[self.lastRead]))
 
-        print "Measurement number: ", self.chipIdentifier.get_meas_count(chip_name)
+        _log.info("Measurement number: ", self.chipIdentifier.get_meas_count(chip_name))
 
-        if (self.measurementCounter > 0):
+        if self.measurementCounter > 0:
             self.bitFlips = hd(self.bits, new_bits)
-        elif (self.chipIdentifier.get_meas_count(chip_name) > 0):
+        elif self.chipIdentifier.get_meas_count(chip_name) > 0:
             self.measurementCounter = self.chipIdentifier.get_meas_count(chip_name)
             self.bitFlips = hd(self.chipIdentifier.signatureMap[chip_name], new_bits)
 
@@ -800,7 +807,7 @@ class Application(Frame):
     def updateRandomnessWindow(self):
         for i, (name, fun) in enumerate(self.randomnessFunMap.items()):
             fun_metric, fun_pass = fun(self.bits)
-            print "%20s %.5e" % (name, fun_metric), fun_pass
+            _log.info("%20s %.5e" % (name, fun_metric), fun_pass)
             self.randomnessFieldVars[i].set("%f" % fun_metric)
             self.randomnessPassVars[i].set("Pass" if fun_pass else "Fail")
         self.randomnessWindow.update()
@@ -876,7 +883,11 @@ class Application(Frame):
             plt.axis([0, 1 if frac_bits else self.nb, 0, 1])
 
 
-print __copyright__
-root = Tk()
-app = Application(master=root)
-app.mainloop()
+def main():
+    print(__copyright__)
+    root = Tk()
+    app = Application(master=root)
+    app.mainloop()
+
+if __name__ == '__main__':
+    main()
