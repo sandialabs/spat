@@ -30,19 +30,22 @@ __version__ = "1.2"
 __author__ = "Ryan Helinski and Mitch Martin"
 
 import os, subprocess, glob, time
+import logging
 import bitstring
-from bitstringutils import *
+from .bitstringutils import *
 
 quartus_path = "C:\\altera\\10.1sp1\\quartus\\bin"
 
 quartus_pgm = quartus_path + "\quartus_pgm"
 quartus_stp = quartus_path + "\quartus_stp"
 
+_log = logging.getLogger(__name__)
+
 def try_syscall (cmd, max_tries=32):
     num_tries = 0 
     
     while (num_tries < max_tries):
-        print "> " + cmd
+        _log.info("> " + cmd)
         retval = os.system(cmd)
         if (retval == 0):
             break
@@ -52,9 +55,9 @@ def try_syscall (cmd, max_tries=32):
             time.sleep(1)
         
     if (num_tries > max_tries):
-        print "Gave up trying"
+        _log.error("Gave up trying")
     else:
-        print "Command returned OK"
+        _log.info("Command returned OK")
         
     return retval
 
@@ -78,19 +81,19 @@ class QuartusCon(object):
                 self.subProcess.stdin.write("q\n")
                 self.subProcess.stdin.close()
                 if self.subProcess.wait() != 0:
-                    print "Subprocess did not return 0"
+                    _log.error("Subprocess did not return 0")
             except IOError as e:
-                print "Failed to close gracefully"
+                _log.error("Failed to close gracefully")
             
     def program(self):
         retval = try_syscall("%s --cable=\"USB-Blaster\" --mode=\"JTAG\" --operation=p %s" % (quartus_pgm, self.cdf_filename))
 
         if (retval == 0):
             stp_args = [quartus_stp, '-t', self.tclFile]
-            print "Pipe> " + " ".join(stp_args)
+            _log.info("Pipe> " + " ".join(stp_args))
             self.subProcess = subprocess.Popen(stp_args, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             for i in range(2):
-                print self.subProcess.stdout.readline()
+                _log.info(self.subProcess.stdout.readline())
 
         return retval
 
@@ -98,9 +101,9 @@ class QuartusCon(object):
         self.subProcess.stdin.write("\n")
         self.subProcess.stdin.flush()
         for i in range(1):
-            print self.subProcess.stdout.readline()
+            _log.info(self.subProcess.stdout.readline())
         myline = self.subProcess.stdout.readline().strip()
-        print repr(myline)
+        _log.info(myline)
         new_bits = bitstring.Bits(hex='0x' + myline[0:(self.nb/4)])
         
         (self.time, self.temp) = self.subProcess.stdout.readline().split(" ")

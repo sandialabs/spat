@@ -50,21 +50,28 @@ from collections import OrderedDict
 
 if sys.version_info.major < 3:
     from Tkinter import *
+    import tkFont
+    import tkFileDialog
+    import tkSimpleDialog
+    import tkMessageBox
 else:
     from tkinter import *
-import tkFont
-import tkFileDialog
-import tkSimpleDialog
-import tkMessageBox
+    import tkinter.font as tkFont
+    import tkinter.filedialog as tkFileDialog
+    import tkinter.simpledialog as tkSimpleDialog
+    import tkinter.messagebox as tkMessageBox
+
+import bitstring
 
 # Local packages
-from sigfile import *
-from quartus import *
-from chipidentify import *
-import bitstring
-from simulator.ropuf import *
-import bch_code
-import randomness
+from .sigfile import *
+from .quartus import *
+from .chipidentify import *
+from .simulator.ropuf import *
+from . import bch_code
+from . import randomness
+
+_log = logging.getLogger(__name__)
 
 def fmtFractionPercent(num, den):
     return '%d / %d = %.3f%%' % (num, den, 100*(float(num) / den))
@@ -154,7 +161,7 @@ class Application(Frame):
         return self.colorMapImmDiff[ str(int(self.bits[index])) + str(int(self.chipIdentifier.unstableBits[self.lastRead][index])) ]
 
     def mapBitGrayscale(self, index):
-        return '#' + ('%02x' % (255*float(hw(self.bitAvgs[index]))/max(1, len(self.bitAvgs[index]))) * 3)
+        return '#' + ('%02x' % int(255*float(hw(self.bitAvgs[index]))/max(1, len(self.bitAvgs[index]))) * 3)
 
     def destroyLegend(self):
         self.colorMapLegend.destroy()
@@ -168,7 +175,7 @@ class Application(Frame):
 
         # Create the legend
         for i in range(len(colorMap)):
-            code = colorMap.keys()[i]
+            code = list(colorMap.keys())[i]
             color = colorMap[code]
             self.colorMapIcons.append(Canvas(self.colorMapLegend, width=self.zoomFactor, height=self.zoomFactor, bd=2, relief="groove", bg=color))
             self.colorMapIcons[i].grid(row=0, column=(2*i)+1)
@@ -186,7 +193,7 @@ class Application(Frame):
 
         # Create the legend
         for i in range(len(self.colorMapGray)):
-            code = self.colorMapGray.keys()[i]
+            code = list(self.colorMapGray.keys())[i]
             color = self.colorMapGray[code]
             self.colorMapIcons.append(Canvas(self.colorMapLegend, width=self.zoomFactor, height=self.zoomFactor, bd=2, relief="groove", bg=color))
             self.colorMapIcons[i].grid(row=0, column=(2*i)+1)
@@ -883,11 +890,8 @@ class Application(Frame):
             plt.axis([0, 1 if frac_bits else self.nb, 0, 1])
 
 
-def main():
+if __name__ == '__main__':
     print(__copyright__)
     root = Tk()
     app = Application(master=root)
     app.mainloop()
-
-if __name__ == '__main__':
-    main()
