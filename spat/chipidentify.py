@@ -114,6 +114,8 @@ class ChipIdentify:
             self.noiseDistMap[parent.get('name')].append(int(noise_dist.text))
 
     def load_inter_chip_other(self, parent, other_name):
+        if other_name.get('name') is None:
+            return
         if other_name.get('name') not in self.interChipDistMap[parent.get('name')]:
             self.interChipDistMap[parent.get('name')][other_name.get('name')] = []
         for other_dist in other_name:
@@ -187,8 +189,12 @@ class ChipIdentify:
         interListEl = etree.SubElement(chipEl, 'inter_chip')
         interListEl.text = "\n" + 3*"\t"
         interListEl.tail = "\n" + 2*"\t"
+        if len(self.interChipDistMap[name]) == 0:
+            return
         for other_name, dist_list in sorted(self.interChipDistMap[name].items(),
                                             key=lambda item: item[0] ):
+            if other_name is None:
+                continue
             otherNameEl = etree.SubElement(interListEl, 'other')
             otherNameEl.attrib['name'] = other_name
             otherNameEl.tail = "\n" + 3*"\t"
@@ -213,9 +219,9 @@ class ChipIdentify:
         if altFileName != None:
             self.fileName = altFileName
         _log.info('Saving chip signature database to \'%s\'' % self.fileName)
-        xmlfile = open(self.fileName, 'w')
-        xmlfile.write(b'<?xml version="1.0" encoding="UTF-8" ?>\n' + etree.tostring(chipListEl))
-        xmlfile.close() # don't need to sync because we close here
+        with open(self.fileName, 'w') as xmlfile:
+            xmlfile.write('<?xml version="1.0" encoding="UTF-8" ?>\n' + \
+                etree.tostring(chipListEl, encoding='unicode'))
 
     def identify(self, bits):
         "This compares a bit string against all known chip signatures and returns the closest match"
