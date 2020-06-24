@@ -116,7 +116,7 @@ Extract the program files from the ZIP distribution or clone the git repository
 from GitHub to somewhere you have read/write access.
 
 After installing a Python environment using the platform-specific instructions 
-below, the required Python packages can be installed in one step. This can be
+above, the required Python packages can be installed in one step. This can be
 done by passing the `requirements.txt` file in the repo to
 [pip](https://pip.pypa.io/en/stable/installing/):
 ```
