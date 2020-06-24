@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
          alt="Travis CI Build Status">
 </a>
 
+
 Introduction
 ------------
 
@@ -41,12 +42,14 @@ tests published in NIST SP 800-22 can be computed and displayed. Noise and
 inter-chip histograms for the sample of PUFs and repeated PUF measurements can
 be drawn.
 
+
 Application
 -----------
 
 The program was designed to be used in an educational setting to allow users
 to interact with PUFs and analyze their performance. This framework serves as
 a step to making PUFs more practical and more broadly understood.
+
 
 Requirements
 ------------
@@ -63,63 +66,79 @@ The following packages for Python are also required:
 * matplotlib
 * scipy
 
-These packages are available on most GNU/Linux distributions.
+These packages are available in most places where Python is supported.
 
 ### Windows
 
-Unofficial Windows binaries for these packages are available from UCI at:
+The [Anaconda Python distribution](https://www.anaconda.com/products/individual)
+is one of the easiest ways to get the scientific Python stack including pip
+installed on Windows.
+
+Alternatively, unofficial Windows binaries for these packages are available from UCI at:
 
     http://www.lfd.uci.edu/~gohlke/pythonlibs/
 
 Otherwise, these packages are available from their respective websites:
 
 * NumPy at www.numpy.org
-* matplotlib at matplotlib.org
-* SciPy at scipy.org
+* matplotlib at www.matplotlib.org
+* SciPy at www.scipy.org
 
 ### Ubuntu
 
 Install the dependencies for Python 3 using:
-```
+```bash
 sudo apt-get install python3 python3-tk python-pip python3-setuptools python3-wheel
 ```
 
 Or, you may install the dependencies for Python 2 (end of life in year 2020):
-```
+```bash
 sudo apt-get install python-tk python-pip python-setuptools python-wheel
 ```
 
 ### Fedora
 
-```
+```bash
 sudo dnf install python3 python3-tkinter
 ```
 
 ### Red Hat Enterprise Linux / CentOS
 
-```
+```bash
 yum install tkinter
 ```
+
 
 Installation
 ------------
 
-Extract the program files from the ZIP distribution to somewhere you have
-read/write access. In a shell or command prompt (Windows), execute the
-'spat.py' file with the Python interpreter:
+Extract the program files from the ZIP distribution or clone the git repository
+from GitHub to somewhere you have read/write access.
 
-    python spat.py
-
-For convenience, a batch file is included for Windows, although this file may
-have to be edited if you installed Python 2.7 to a non-standard location. Just
-double-click:
-
-    spat.bat
+After installing a Python environment using the platform-specific instructions 
+below, the required Python packages can be installed in one step. This can be
+done by passing the `requirements.txt` file in the repo to
+[pip](https://pip.pypa.io/en/stable/installing/):
+```
+pip install -r requirements.txt
+```
 
 
 Starting the GUI
 ================
 
+In a shell or command prompt (on Windows), execute the
+'spat.py' file with the Python interpreter:
+```
+python -m spat
+```
+
+For convenience, a batch file is included for Windows, although this file may
+have to be edited if you installed Python 2.7 to a non-standard location. Just
+double-click:
+```
+spat.bat
+```
 
 
 Tutorial
